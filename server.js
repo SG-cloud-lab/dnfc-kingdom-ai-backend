@@ -1,8 +1,17 @@
 const express = require("express");
 const fs = require("fs");
+
 const app = express();
 
 app.use(express.json());
+let knowledge = "";
+
+try {
+    knowledge = fs.readFileSync("./knowledge/dnfc-library.txt", "utf8");
+    console.log("DNFC knowledge loaded");
+} catch (error) {
+    console.log("Knowledge file not found");
+}
 
 
 // Load DNFC knowledge
