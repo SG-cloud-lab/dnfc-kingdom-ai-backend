@@ -26,6 +26,9 @@ try {
 
 
 // AI question endpoint
+app.get("/", (req, res) => {
+    res.send("DNFC Kingdom AI Backend is running");
+});
 app.post("/ask", (req, res) => {
 
     const question = req.body.question.toLowerCase();
