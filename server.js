@@ -55,7 +55,7 @@ Give a clear, biblical and spiritually insightful answer.
             answer: response
         });
 
-catch(error) {
+    }catch(error) {
 
     console.log("GEMINI ERROR:", error);
 
