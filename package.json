@@ -11,6 +11,6 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "openai": "^4.20.1",
-    "@google/generative-ai": "^0.21.0",
+    "@google/generative-ai": "^0.21.0"
   }
 }
