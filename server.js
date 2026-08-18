@@ -19,7 +19,7 @@ app.get("/", (req, res) => {
 });
 app.post("/ask", (req, res) => {
 
-    const question = req.body.question.toLowerCase();
+    const question = req.body.question?.toLowerCase() || "";
 
     let answer = "I am searching the DNFC Kingdom AI knowledge library.";
 
