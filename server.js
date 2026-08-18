@@ -13,18 +13,6 @@ try {
     console.log("Knowledge file not found");
 }
 
-
-// Load DNFC knowledge
-let knowledge = "";
-
-try {
-    knowledge = fs.readFileSync("../knowledge/dnfc-library.txt", "utf8");
-    console.log("DNFC knowledge loaded");
-} catch (error) {
-    console.log("Knowledge file not found");
-}
-
-
 // AI question endpoint
 app.get("/", (req, res) => {
     res.send("DNFC Kingdom AI Backend is running");
