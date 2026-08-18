@@ -9,6 +9,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const app = express();
 
 app.use(express.json());
+
 let knowledge = "";
 
 try {
@@ -18,13 +19,23 @@ try {
     console.log("Knowledge file not found");
 }
 
-// AI question endpoint
+
+// Test route
 app.get("/", (req, res) => {
     res.send("DNFC Kingdom AI Backend is running");
 });
+
+
+// AI Question Route
 app.post("/ask", async (req, res) => {
 
     const question = req.body.question || "";
+
+    if (!question) {
+        return res.json({
+            answer: "Please enter a question."
+        });
+    }
 
     try {
 
@@ -32,43 +43,53 @@ app.post("/ask", async (req, res) => {
             model: "gemini-1.5-flash"
         });
 
+
         const prompt = `
 You are DNFC Kingdom AI.
 
-Answer questions about Jesus Christ, the Bible, and Christian teachings.
+You answer questions about Jesus Christ, the Bible, Christian teachings, and spiritual matters.
 
-Use this DNFC knowledge library:
+Your foundation is the DNFC Kingdom AI knowledge library below:
 
+--------------------
 ${knowledge}
+--------------------
 
 Question:
 ${question}
 
-Give a clear, biblical and spiritually insightful answer.
+Give a clear, biblical, spiritually insightful answer.
+Stay faithful to the provided knowledge library.
 `;
+
 
         const result = await model.generateContent(prompt);
 
         const response = result.response.text();
 
+
         res.json({
             answer: response
         });
 
-    }catch(error) {
 
-    console.log("GEMINI ERROR:", error);
+    } catch (error) {
 
-    res.status(500).json({
-        error: error.message
-    });
+        console.log("GEMINI ERROR:", error.message);
 
-}
+        res.status(500).json({
+            answer: "I am unable to answer right now.",
+            error: error.message
+        });
+
+    }
 
 });
 
-// Render uses PORT environment variable
+
+// Render Port
 const PORT = process.env.PORT || 3000;
+
 
 app.listen(PORT, () => {
     console.log("DNFC Kingdom AI server running on port " + PORT);
