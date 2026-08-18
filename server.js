@@ -55,15 +55,15 @@ Give a clear, biblical and spiritually insightful answer.
             answer: response
         });
 
-    } catch(error) {
+catch(error) {
 
-        console.log(error);
+    console.log("GEMINI ERROR:", error);
 
-        res.json({
-            answer: "I am unable to answer right now."
-        });
+    res.status(500).json({
+        error: error.message
+    });
 
-    }
+}
 
 });
 
