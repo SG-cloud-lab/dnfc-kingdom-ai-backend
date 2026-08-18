@@ -1,5 +1,10 @@
 const express = require("express");
 const fs = require("fs");
+require("dotenv").config();
+
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const app = express();
 
@@ -17,54 +22,50 @@ try {
 app.get("/", (req, res) => {
     res.send("DNFC Kingdom AI Backend is running");
 });
-app.post("/ask", (req, res) => {
+app.post("/ask", async (req, res) => {
 
-    const question = req.body.question?.toLowerCase() || "";
+    const question = req.body.question || "";
 
-    let answer = "I am searching the DNFC Kingdom AI knowledge library.";
+    try {
 
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash"
+        });
 
-    if(question.includes("christ")) {
+        const prompt = `
+You are DNFC Kingdom AI.
 
-        answer = "According to DNFC Kingdom AI teachings, Christ is the centre of God's revelation and the expression of God's eternal purpose.";
+Answer questions about Jesus Christ, the Bible, and Christian teachings.
+
+Use this DNFC knowledge library:
+
+${knowledge}
+
+Question:
+${question}
+
+Give a clear, biblical and spiritually insightful answer.
+`;
+
+        const result = await model.generateContent(prompt);
+
+        const response = result.response.text();
+
+        res.json({
+            answer: response
+        });
+
+    } catch(error) {
+
+        console.log(error);
+
+        res.json({
+            answer: "I am unable to answer right now."
+        });
 
     }
-
-
-    else if(question.includes("eternal")) {
-
-        answer = "Eternal life is the very life of God revealed through Jesus Christ.";
-
-    }
-
-
-    else {
-
-        // Search the knowledge file
-        const words = question.split(" ");
-
-        let found = knowledge
-        .split("\n")
-        .filter(line =>
-            words.some(word => 
-                line.toLowerCase().includes(word)
-            )
-        )
-        .slice(0,5);
-
-
-        if(found.length > 0){
-            answer = found.join(" ");
-        }
-    }
-
-
-    res.json({
-        answer: answer
-    });
 
 });
-
 
 // Render uses PORT environment variable
 const PORT = process.env.PORT || 3000;
