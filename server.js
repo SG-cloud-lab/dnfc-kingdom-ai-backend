@@ -22,7 +22,7 @@ try {
 
 } catch (error) {
 
-    console.log("Knowledge file not found:", error.message);
+    console.log("Knowledge file error:", error.message);
 
 }
 
@@ -35,21 +35,28 @@ app.get("/", (req, res) => {
 });
 
 
-// AI Question Route
+// AI Route
 app.post("/ask", async (req, res) => {
-console.log("ASK ROUTE REACHED");
+
+    console.log("ASK ROUTE REACHED");
+
+
     const question = req.body.question;
+
 
     if (!question) {
 
         return res.status(400).json({
-            error: "Please provide a question"
+
+            error: "Question is required"
+
         });
 
     }
 
 
     try {
+
 
         const model = genAI.getGenerativeModel({
 
@@ -65,23 +72,24 @@ You are DNFC Kingdom AI.
 
 Your purpose is to answer questions about Jesus Christ, Scripture, Christian doctrine, and spiritual truths.
 
-You must use the DNFC Kingdom AI knowledge library below as your primary theological foundation.
+Use the DNFC Kingdom AI knowledge library as your foundation.
 
-Do not mention that you are an AI.
-Do not give generic chatbot responses.
-Give clear, deep, biblical, spiritually insightful answers.
+Give deep, biblical, clear and spiritually insightful answers.
+
+Do not answer like a simple chatbot.
+Do not give programmed responses.
 
 DNFC KNOWLEDGE LIBRARY:
 
 ${knowledge}
 
 
-USER QUESTION:
+QUESTION:
 
 ${question}
 
 
-Provide a well explained answer using Scripture and spiritual understanding.
+Answer:
 
 `;
 
@@ -102,7 +110,7 @@ Provide a well explained answer using Scripture and spiritual understanding.
 
 
 
-    } catch (error) {
+    } catch(error) {
 
 
         console.log("GEMINI ERROR:", error);
@@ -110,8 +118,7 @@ Provide a well explained answer using Scripture and spiritual understanding.
 
         res.status(500).json({
 
-            error: "AI service failed",
-            details: error.message
+            error: error.message
 
         });
 
@@ -123,7 +130,7 @@ Provide a well explained answer using Scripture and spiritual understanding.
 
 
 
-// Render Port
+// Render port
 const PORT = process.env.PORT || 3000;
 
 
