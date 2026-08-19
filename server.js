@@ -37,7 +37,7 @@ app.get("/", (req, res) => {
 
 // AI Question Route
 app.post("/ask", async (req, res) => {
-
+console.log("ASK ROUTE REACHED");
     const question = req.body.question;
 
     if (!question) {
