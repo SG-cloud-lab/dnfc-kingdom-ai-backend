@@ -5,7 +5,11 @@ require("dotenv").config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-console.log("Gemini key loaded:", process.env.GEMINI_API_KEY ? "YES" : "NO");
+
+console.log(
+    "Gemini key loaded:",
+    process.env.GEMINI_API_KEY ? "YES" : "NO"
+);
 
 const app = express();
 
@@ -13,7 +17,9 @@ app.use(express.json());
 
 let knowledge = "";
 
+// Load DNFC knowledge library
 try {
+
     knowledge = fs.readFileSync(
         "./knowledge/dnfc-library.txt",
         "utf8"
@@ -21,22 +27,27 @@ try {
 
     console.log("DNFC knowledge loaded successfully");
 
-} catch (error) {
+} catch(error) {
 
-    console.log("Knowledge file error:", error.message);
+    console.log(
+        "Knowledge file error:",
+        error.message
+    );
 
 }
 
 
-// Test route
+// Home test route
 app.get("/", (req, res) => {
 
-    res.send("DNFC Kingdom AI Backend is running");
+    res.send(
+        "DNFC Kingdom AI Backend is running"
+    );
 
 });
 
 
-// AI Route
+// AI route
 app.post("/ask", async (req, res) => {
 
     console.log("ASK ROUTE REACHED");
@@ -45,15 +56,10 @@ app.post("/ask", async (req, res) => {
     const question = req.body.question;
 
 
-    if (!question) {
-
-        return res.status(400).json({
-
-            error: "Question is required"
-
-        });
-
-    }
+    console.log(
+        "QUESTION RECEIVED:",
+        question
+    );
 
 
     try {
@@ -71,41 +77,41 @@ app.post("/ask", async (req, res) => {
 
 You are DNFC Kingdom AI.
 
-Your purpose is to answer questions about Jesus Christ, Scripture, Christian doctrine, and spiritual truths.
+You answer questions about Jesus Christ,
+the Bible, Christian teachings, and spiritual truth.
 
-Use the DNFC Kingdom AI knowledge library as your foundation.
-
-Give deep, biblical, clear and spiritually insightful answers.
-
-Do not answer like a simple chatbot.
-Do not give programmed responses.
-
-DNFC KNOWLEDGE LIBRARY:
+Use the DNFC Kingdom AI knowledge library below:
 
 ${knowledge}
 
 
-QUESTION:
+Question:
 
 ${question}
 
 
-Answer:
+Give a clear, biblical, spiritually insightful answer.
 
 `;
 
 
 
+        console.log("Sending request to Gemini...");
+
+
         const result = await model.generateContent(prompt);
 
 
-        const answer = result.response.text();
+        console.log("Gemini responded successfully");
+
+
+        const response = result.response.text();
 
 
 
         res.json({
 
-            answer: answer
+            answer: response
 
         });
 
@@ -114,12 +120,16 @@ Answer:
     } catch(error) {
 
 
-        console.log("GEMINI ERROR:", error);
+        console.log("FULL GEMINI ERROR:");
+        console.log(error);
+
 
 
         res.status(500).json({
 
-            error: error.message
+            error: "AI service failed",
+
+            details: error.message || "Unknown error"
 
         });
 
@@ -128,7 +138,6 @@ Answer:
 
 
 });
-
 
 
 // Render port
