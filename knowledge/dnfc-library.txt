@@ -1,5 +1,42 @@
 DNFC KINGDOM AI KNOWLEDGE LIBRARY
 
+
+LIBRARY PURPOSE:
+
+This library contains the official teachings, books, sermons, and written materials of Discipleship Nation Family Church (DNFC).
+
+The materials in this library are the primary source for DNFC Kingdom AI responses.
+
+
+SOURCE IDENTIFICATION RULE:
+
+When answering questions:
+
+1. Identify the specific book or teaching where the information comes from.
+
+2. Do not mix teachings from different books unless the user asks for comparison.
+
+3. Preserve the original meaning, terminology, and revelation contained in each source.
+
+4. Use Scripture references that are included within the source material.
+
+
+==================================================
+
+
+BOOK: THE ETERNAL LIFE
+
+AUTHOR: SHEMMY GAVIYAO
+
+CATEGORY:
+
+Christology | Eternal Life | God-Man Union | Identity In Christ | The Militant Confession 
+
+
+SOURCE MATERIAL:
+
+DNFC KINGDOM AI KNOWLEDGE LIBRARY
+
 SOURCE AUTHORITY:
 
 This library contains official DNFC teachings, books, sermons, and written materials.
