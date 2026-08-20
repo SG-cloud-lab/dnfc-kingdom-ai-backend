@@ -50,8 +50,8 @@ app.post("/ask", async (req, res) => {
             throw new Error("API Key missing on server");
         }
 
-        // UPDATED: Using gemini-2.0-flash which is currently supported
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        // Updated to gemini-3.6-flash as requested by the error message
+        const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
         
         const prompt = `You are DNFC Kingdom AI. You answer questions about Jesus Christ, the Bible, Christian teachings, and spiritual truth. Use this knowledge library: ${knowledge}\n\nQuestion: ${question}\n\nGive a clear, biblical, spiritually insightful answer.`;
 
@@ -73,3 +73,4 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`DNFC Kingdom AI Server is running on port ${PORT}`);
 });
+
