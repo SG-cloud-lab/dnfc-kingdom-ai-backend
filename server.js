@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 
-// Global error handlers for silent crashes
+// Global error handlers
 process.on('uncaughtException', (err) => {
     console.error('UNCAUGHT EXCEPTION! Shutting down...', err);
 });
@@ -54,7 +54,9 @@ app.post("/ask", async (req, res) => {
             throw new Error("API Key missing on server");
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        // Updated model name to 'gemini-1.5-flash-latest' to resolve 404 error
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+        
         const prompt = `You are DNFC Kingdom AI. You answer questions about Jesus Christ, the Bible, Christian teachings, and spiritual truth. Use this knowledge library: ${knowledge}\n\nQuestion: ${question}\n\nGive a clear, biblical, spiritually insightful answer.`;
 
         console.log("Sending request to Gemini...");
@@ -76,4 +78,3 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`DNFC Kingdom AI Server is running on port ${PORT}`);
 });
-            
