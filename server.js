@@ -16,7 +16,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 
 if (!process.env.GEMINI_API_KEY) {
-    console.error("FATAL ERROR: GEMINI_API_KEY is not defined.");
+    console.error("FATAL ERROR: GEMINI_API_KEY is missing");
 }
 
 
@@ -30,57 +30,96 @@ const app = express();
 app.use(express.json());
 
 
-// ================================
-// LOAD DNFC KNOWLEDGE LIBRARY
-// ================================
+
+// =================================
+// LOAD ALL DNFC KNOWLEDGE FILES
+// =================================
 
 let knowledge = "";
 
+
 try {
 
-    const knowledgePath = path.join(
+    const knowledgeFolder = path.join(
         __dirname,
-        "knowledge",
-        "dnfc-library.txt"
+        "knowledge"
     );
 
-    knowledge = fs.readFileSync(
-        knowledgePath,
-        "utf8"
+
+    const files = fs.readdirSync(
+        knowledgeFolder
     );
+
+
+    files.forEach((file)=>{
+
+
+        if(file.endsWith(".txt")){
+
+
+            const fileContent = fs.readFileSync(
+                path.join(
+                    knowledgeFolder,
+                    file
+                ),
+                "utf8"
+            );
+
+
+            knowledge += `
+
+===========================
+SOURCE: ${file}
+===========================
+
+${fileContent}
+
+`;
+
+        }
+
+
+    });
+
 
     console.log(
-        "DNFC knowledge loaded successfully."
+        "All DNFC knowledge files loaded successfully."
     );
 
-} catch(error) {
+
+} catch(error){
+
 
     console.error(
-        "Knowledge file error:",
+        "Knowledge loading error:",
         error.message
     );
+
 
 }
 
 
 
-// ================================
-// LOAD DNFC AI INSTRUCTIONS
-// ================================
+// =================================
+// LOAD AI INSTRUCTIONS
+// =================================
+
 
 let instructions = "";
 
-try {
 
-    const instructionPath = path.join(
-        __dirname,
-        "dnfc-ai-instructions.txt"
-    );
+try {
 
 
     instructions = fs.readFileSync(
-        instructionPath,
+
+        path.join(
+            __dirname,
+            "dnfc-ai-instructions.txt"
+        ),
+
         "utf8"
+
     );
 
 
@@ -89,35 +128,42 @@ try {
     );
 
 
-} catch(error) {
+} catch(error){
+
 
     console.error(
-        "Instructions file error:",
+        "Instructions loading error:",
         error.message
     );
+
 
 }
 
 
 
-// ================================
-// HOME TEST ROUTE
-// ================================
 
-app.get("/", (req,res)=>{
+// =================================
+// HOME ROUTE
+// =================================
 
-    res.status(200).send(
+
+app.get("/",(req,res)=>{
+
+
+    res.send(
         "DNFC Kingdom AI Backend is Live."
     );
+
 
 });
 
 
 
 
-// ================================
+// =================================
 // AI QUESTION ROUTE
-// ================================
+// =================================
+
 
 app.post("/ask", async(req,res)=>{
 
@@ -127,22 +173,24 @@ app.post("/ask", async(req,res)=>{
     );
 
 
-    if(!req.body || !req.body.question){
+    const question = req.body.question;
+
+
+    if(!question){
+
 
         return res.status(400).json({
 
-            error:"Question is required."
+            error:"Question is required"
 
         });
+
 
     }
 
 
-    const question = req.body.question;
 
-
-
-    try {
+    try{
 
 
         const model = genAI.getGenerativeModel({
@@ -159,25 +207,28 @@ app.post("/ask", async(req,res)=>{
 ${instructions}
 
 
-========================
-DNFC KNOWLEDGE LIBRARY
-========================
+
+DNFC KNOWLEDGE LIBRARY:
+
 
 ${knowledge}
 
 
 
-========================
-USER QUESTION
-========================
+USER QUESTION:
+
 
 ${question}
 
 
 
-Answer according to the DNFC Kingdom AI instructions.
+Answer using DNFC teachings first.
 
-Give a biblical, Christ-centred and spiritually insightful response.
+If the answer exists in the DNFC library, prioritize that understanding.
+
+Use Scripture and provide a clear Christ-centred explanation.
+
+
 
 `;
 
@@ -200,17 +251,17 @@ Give a biblical, Christ-centred and spiritually insightful response.
 
         res.json({
 
-            answer: answer
+            answer:answer
 
         });
 
 
 
-    } catch(error){
+    }catch(error){
 
 
         console.error(
-            "DETAILED AI ERROR:",
+            "GEMINI ERROR:",
             error
         );
 
@@ -232,9 +283,10 @@ Give a biblical, Christ-centred and spiritually insightful response.
 
 
 
-// ================================
+// =================================
 // START SERVER
-// ================================
+// =================================
+
 
 const PORT = process.env.PORT || 10000;
 
@@ -244,9 +296,11 @@ app.listen(
     "0.0.0.0",
     ()=>{
 
+
         console.log(
-            `DNFC Kingdom AI Server is running on port ${PORT}`
+            `DNFC Kingdom AI Server running on port ${PORT}`
         );
+
 
     }
 );
