@@ -54,8 +54,8 @@ app.post("/ask", async (req, res) => {
             throw new Error("API Key missing on server");
         }
 
-        // Updated model name to 'gemini-1.5-flash-latest' to resolve 404 error
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+        // Using the standard 'gemini-1.5-flash' identifier
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         
         const prompt = `You are DNFC Kingdom AI. You answer questions about Jesus Christ, the Bible, Christian teachings, and spiritual truth. Use this knowledge library: ${knowledge}\n\nQuestion: ${question}\n\nGive a clear, biblical, spiritually insightful answer.`;
 
