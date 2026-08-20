@@ -3,170 +3,107 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 
-process.on("uncaughtException", (err) => {
-    console.error("UNCAUGHT EXCEPTION:", err);
-});
-
-process.on("unhandledRejection", (err) => {
-    console.error("UNHANDLED REJECTION:", err);
-});
-
-
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-
-
-if (!process.env.GEMINI_API_KEY) {
-    console.error("FATAL ERROR: GEMINI_API_KEY is missing");
-}
-
-
-const genAI = new GoogleGenerativeAI(
-    process.env.GEMINI_API_KEY || ""
-);
-
 
 const app = express();
 
 app.use(express.json());
 
 
+// ===============================
+// GEMINI CONNECTION
+// ===============================
 
-// =================================
-// LOAD ALL DNFC KNOWLEDGE FILES
-// =================================
+if (!process.env.GEMINI_API_KEY) {
+    console.error("FATAL: GEMINI_API_KEY missing");
+}
+
+const genAI = new GoogleGenerativeAI(
+    process.env.GEMINI_API_KEY
+);
+
+
+// ===============================
+// LOAD DNFC KNOWLEDGE LIBRARY
+// ===============================
 
 let knowledge = "";
 
-
 try {
 
-    const knowledgeFolder = path.join(
+    const knowledgePath = path.join(
         __dirname,
-        "knowledge"
+        "knowledge",
+        "dnfc-library.txt"
     );
 
-
-    const files = fs.readdirSync(
-        knowledgeFolder
+    knowledge = fs.readFileSync(
+        knowledgePath,
+        "utf8"
     );
-
-
-    files.forEach((file)=>{
-
-
-        if(file.endsWith(".txt")){
-
-
-            const fileContent = fs.readFileSync(
-                path.join(
-                    knowledgeFolder,
-                    file
-                ),
-                "utf8"
-            );
-
-
-            knowledge += `
-
-===========================
-SOURCE: ${file}
-===========================
-
-${fileContent}
-
-`;
-
-        }
-
-
-    });
-
 
     console.log(
-        "All DNFC knowledge files loaded successfully."
+        "DNFC knowledge loaded successfully."
     );
 
-
 } catch(error){
-
 
     console.error(
         "Knowledge loading error:",
         error.message
     );
 
-
 }
 
 
-
-// =================================
+// ===============================
 // LOAD AI INSTRUCTIONS
-// =================================
-
+// ===============================
 
 let instructions = "";
 
-
 try {
 
-
     instructions = fs.readFileSync(
-
         path.join(
             __dirname,
             "dnfc-ai-instructions.txt"
         ),
-
         "utf8"
-
     );
-
 
     console.log(
         "DNFC AI instructions loaded successfully."
     );
 
-
-} catch(error){
-
+}catch(error){
 
     console.error(
         "Instructions loading error:",
         error.message
     );
 
-
 }
 
 
+// ===============================
+// TEST ROUTE
+// ===============================
 
-
-// =================================
-// HOME ROUTE
-// =================================
-
-
-app.get("/",(req,res)=>{
-
+app.get("/", (req,res)=>{
 
     res.send(
         "DNFC Kingdom AI Backend is Live."
     );
 
-
 });
 
 
-
-
-// =================================
+// ===============================
 // AI QUESTION ROUTE
-// =================================
-
+// ===============================
 
 app.post("/ask", async(req,res)=>{
-
 
     console.log(
         "ASK ROUTE REACHED"
@@ -178,24 +115,24 @@ app.post("/ask", async(req,res)=>{
 
     if(!question){
 
-
         return res.status(400).json({
 
-            error:"Question is required"
+            error:
+            "Please provide a question"
 
         });
-
 
     }
 
 
+    try {
 
-    try{
 
+        const model =
+        genAI.getGenerativeModel({
 
-        const model = genAI.getGenerativeModel({
-
-            model:"gemini-3.6-flash"
+            model:
+            "gemini-3.6-flash"
 
         });
 
@@ -203,32 +140,51 @@ app.post("/ask", async(req,res)=>{
 
         const prompt = `
 
+You are DNFC Kingdom AI.
+
+You are not a general chatbot.
+
+Your primary purpose is to teach according to the DNFC Kingdom AI knowledge library and instructions.
+
+IMPORTANT RULES:
+
+1. Always check and follow the DNFC instructions first.
+
+2. Always use the DNFC knowledge library as your first source of truth.
+
+3. Do not contradict DNFC teachings.
+
+4. If the answer exists in the DNFC library, answer from the library.
+
+5. Only use general Gemini knowledge when the DNFC library does not contain enough information.
+
+6. Keep answers biblical, spiritual, clear and mature.
+
+7. When explaining Scripture, focus on Christ, the finished work of Christ, the Holy Spirit, identity in Christ, and God's eternal purpose.
+
+========================
+
+DNFC AI INSTRUCTIONS:
 
 ${instructions}
 
 
+========================
 
 DNFC KNOWLEDGE LIBRARY:
-
 
 ${knowledge}
 
 
+========================
+
 
 USER QUESTION:
-
 
 ${question}
 
 
-
-Answer using DNFC teachings first.
-
-If the answer exists in the DNFC library, prioritize that understanding.
-
-Use Scripture and provide a clear Christ-centred explanation.
-
-
+Give a detailed but understandable answer.
 
 `;
 
@@ -239,19 +195,19 @@ Use Scripture and provide a clear Christ-centred explanation.
         );
 
 
-
-        const result = await model.generateContent(
-            prompt
-        );
+        const result =
+        await model.generateContent(prompt);
 
 
-        const answer = result.response.text();
+
+        const answer =
+        result.response.text();
 
 
 
         res.json({
 
-            answer:answer
+            answer: answer
 
         });
 
@@ -268,9 +224,11 @@ Use Scripture and provide a clear Christ-centred explanation.
 
         res.status(500).json({
 
-            error:"AI Service failed",
+            error:
+            "AI Service failed",
 
-            details:error.message
+            details:
+            error.message
 
         });
 
@@ -281,14 +239,12 @@ Use Scripture and provide a clear Christ-centred explanation.
 });
 
 
-
-
-// =================================
+// ===============================
 // START SERVER
-// =================================
+// ===============================
 
-
-const PORT = process.env.PORT || 10000;
+const PORT =
+process.env.PORT || 10000;
 
 
 app.listen(
@@ -296,11 +252,10 @@ app.listen(
     "0.0.0.0",
     ()=>{
 
-
         console.log(
-            `DNFC Kingdom AI Server running on port ${PORT}`
+            "DNFC Kingdom AI Server running on port "
+            + PORT
         );
-
 
     }
 );
