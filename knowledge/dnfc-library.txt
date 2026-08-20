@@ -1,3 +1,22 @@
+DNFC KINGDOM AI KNOWLEDGE LIBRARY
+
+SOURCE AUTHORITY:
+
+This library contains official DNFC teachings, books, sermons, and written materials.
+
+IMPORTANT RULE:
+
+When answering questions, use this library as the primary source.
+
+Identify the book or teaching source when possible.
+
+Do not combine different books unless the user asks for comparison.
+
+==================================================
+
+BOOK: THE ETERNAL LIFE
+
+SOURCE MATERIAL:
 The Eternal Life
 
 God-Man Union
