@@ -30,7 +30,25 @@ try {
 } catch (error) {
     console.error("Knowledge file error:", error.message);
 }
+let instructions = "";
 
+try {
+
+    instructions = fs.readFileSync(
+        "./dnfc-ai-instructions.txt",
+        "utf8"
+    );
+
+    console.log("DNFC AI instructions loaded successfully");
+
+} catch(error) {
+
+    console.log(
+        "Instructions file error:",
+        error.message
+    );
+
+}
 app.get("/", (req, res) => {
     res.status(200).send("DNFC Kingdom AI Backend is Live.");
 });
