@@ -69,7 +69,11 @@ try {
     );
 
 
-    knowledge = library + "\n\n" + revelations;
+    knowledge =
+"===== DNFC LIBRARY (BOOKS) =====\n\n" +
+library +
+"\n\n===== DNFC REVELATIONS =====\n\n" +
+revelations;
 
 
     console.log(
