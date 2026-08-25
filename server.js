@@ -89,6 +89,34 @@ revelations;
     );
 
 }
+// ===============================
+// LOAD DNFC REVELATIONS
+// ===============================
+
+let revelations = "";
+
+try {
+    revelations = fs.readFileSync(
+        path.join(
+            __dirname,
+            "knowledge",
+            "dnfc-revelations.txt"
+        ),
+        "utf8"
+    );
+
+    console.log(
+        "DNFC revelations loaded successfully."
+    );
+
+} catch(error){
+
+    console.error(
+        "Revelations loading error:",
+        error.message
+    );
+
+}
 
 // ===============================
 // LOAD AI INSTRUCTIONS
