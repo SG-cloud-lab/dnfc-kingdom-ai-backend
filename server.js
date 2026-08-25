@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
@@ -7,7 +8,19 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
 
+// ===============================
+// MIDDLEWARE (CRITICAL FOR CORS)
+// ===============================
+app.use(cors({
+    origin: "*",
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 app.use(express.json());
+
+// Handle preflight OPTIONS requests
+app.options("*", cors());
 
 
 // ===============================
@@ -30,7 +43,6 @@ const genAI = new GoogleGenerativeAI(
 let knowledge = "";
 
 try {
-
     const knowledgePath = path.join(
         __dirname,
         "knowledge",
@@ -47,12 +59,10 @@ try {
     );
 
 } catch(error){
-
     console.error(
         "Knowledge loading error:",
         error.message
     );
-
 }
 
 
@@ -63,7 +73,6 @@ try {
 let instructions = "";
 
 try {
-
     instructions = fs.readFileSync(
         path.join(
             __dirname,
@@ -76,13 +85,11 @@ try {
         "DNFC AI instructions loaded successfully."
     );
 
-}catch(error){
-
+} catch(error){
     console.error(
         "Instructions loading error:",
         error.message
     );
-
 }
 
 
@@ -90,12 +97,8 @@ try {
 // TEST ROUTE
 // ===============================
 
-app.get("/", (req,res)=>{
-
-    res.send(
-        "DNFC Kingdom AI Backend is Live."
-    );
-
+app.get("/", (req, res) => {
+    res.send("DNFC Kingdom AI Backend is Live.");
 });
 
 
@@ -103,43 +106,24 @@ app.get("/", (req,res)=>{
 // AI QUESTION ROUTE
 // ===============================
 
-app.post("/ask", async(req,res)=>{
-
-    console.log(
-        "ASK ROUTE REACHED"
-    );
-
+app.post("/ask", async (req, res) => {
+    console.log("ASK ROUTE REACHED");
 
     const question = req.body.question;
 
-
-    if(!question){
-
+    if (!question) {
         return res.status(400).json({
-
-            error:
-            "Please provide a question"
-
+            error: "Please provide a question"
         });
-
     }
 
-
     try {
-
-
-        const model =
-        genAI.getGenerativeModel({
-
-            model:
-            "gemini-3.6-flash"
-
+        // Updated to a valid model identifier
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash"
         });
 
-
-
         const prompt = `
-
 You are DNFC Kingdom AI.
 
 You are not a general chatbot.
@@ -185,57 +169,24 @@ ${question}
 
 
 Give a detailed but understandable answer.
-
 `;
 
+        console.log("Sending request to Gemini...");
 
-
-        console.log(
-            "Sending request to Gemini..."
-        );
-
-
-        const result =
-        await model.generateContent(prompt);
-
-
-
-        const answer =
-        result.response.text();
-
-
+        const result = await model.generateContent(prompt);
+        const answer = result.response.text();
 
         res.json({
-
             answer: answer
-
         });
 
-
-
-    }catch(error){
-
-
-        console.error(
-            "GEMINI ERROR:",
-            error
-        );
-
-
+    } catch (error) {
+        console.error("GEMINI ERROR:", error);
         res.status(500).json({
-
-            error:
-            "AI Service failed",
-
-            details:
-            error.message
-
+            error: "AI Service failed",
+            details: error.message
         });
-
-
     }
-
-
 });
 
 
@@ -243,19 +194,14 @@ Give a detailed but understandable answer.
 // START SERVER
 // ===============================
 
-const PORT =
-process.env.PORT || 10000;
-
+const PORT = process.env.PORT || 10000;
 
 app.listen(
     PORT,
     "0.0.0.0",
-    ()=>{
-
+    () => {
         console.log(
-            "DNFC Kingdom AI Server running on port "
-            + PORT
+            "DNFC Kingdom AI Server running on port " + PORT
         );
-
     }
 );
