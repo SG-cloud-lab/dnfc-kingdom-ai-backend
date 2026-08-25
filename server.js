@@ -120,8 +120,8 @@ app.post("/ask", async (req, res) => {
     try {
         // Updated to a valid model identifier
         const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash"
-        });
+    model: "gemini-3.6-flash"
+});
 
         const prompt = `
 You are DNFC Kingdom AI.
