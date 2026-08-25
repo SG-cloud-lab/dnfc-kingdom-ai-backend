@@ -207,7 +207,7 @@ ${instructions}
 
 ========================
 
-DNFC KNOWLEDGE LIBRARY:
+DNFC KNOWLEDGE SOURCES:
 
 ${knowledge}
 
