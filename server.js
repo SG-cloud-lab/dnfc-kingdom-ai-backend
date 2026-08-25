@@ -43,28 +43,48 @@ const genAI = new GoogleGenerativeAI(
 let knowledge = "";
 
 try {
-    const knowledgePath = path.join(
+
+    const libraryPath = path.join(
         __dirname,
         "knowledge",
         "dnfc-library.txt"
     );
 
-    knowledge = fs.readFileSync(
-        knowledgePath,
+    const revelationsPath = path.join(
+        __dirname,
+        "knowledge",
+        "dnfc-revelations.txt"
+    );
+
+
+    const library = fs.readFileSync(
+        libraryPath,
         "utf8"
     );
 
-    console.log(
-        "DNFC knowledge loaded successfully."
+
+    const revelations = fs.readFileSync(
+        revelationsPath,
+        "utf8"
     );
 
+
+    knowledge = library + "\n\n" + revelations;
+
+
+    console.log(
+        "DNFC knowledge and revelations loaded successfully."
+    );
+
+
 } catch(error){
+
     console.error(
         "Knowledge loading error:",
         error.message
     );
-}
 
+}
 
 // ===============================
 // LOAD AI INSTRUCTIONS
