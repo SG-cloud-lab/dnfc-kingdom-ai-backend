@@ -79,7 +79,7 @@ for (const file of revelationFiles) {
 }
 
 
-    const revelations = fs.readFileSync(
+    revelations = fs.readFileSync(
         revelationsPath,
         "utf8"
     );
