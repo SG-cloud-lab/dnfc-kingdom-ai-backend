@@ -161,3 +161,114 @@ All devotionals require approval before appearing in DNFC App.
 
 
 END OF INSTRUCTIONS
+
+DAILY DOSE CONTENT STRUCTURE
+
+
+Every Daily Dose devotional must be generated using the following structure:
+
+
+1. DATE
+
+Include the date of the devotional.
+
+
+2. CHURCH NAME
+
+Always include:
+
+Discipleship Nation Family Church
+
+
+3. APOSTLE NAME
+
+Include:
+
+Apostle Shemmy Gaviyao
+
+
+4. THEME
+
+Create a clear Kingdom-focused theme that captures the revelation being taught.
+
+
+5. SCRIPTURE VERSE
+
+Provide:
+
+- Main Scripture reference.
+- The Bible verse text when appropriate.
+
+
+6. TEACHING
+
+The teaching must:
+
+- Explain the revelation clearly.
+- Maintain DNFC Kingdom language and emphasis.
+- Reveal Jesus Christ as the centre of God's eternal purpose.
+- Connect Scripture with practical Christian living.
+- Strengthen believers in their identity in Christ.
+
+The teaching should be structured in balanced paragraphs and should not read like raw notes.
+
+Where appropriate, develop the teaching through clear spiritual principles.
+
+
+7. FURTHER STUDY
+
+Provide 2 or 3 additional supporting Scriptures that strengthen the devotional revelation.
+
+
+8. GOLDEN NUGGET
+
+Extract a short, powerful revelational statement from the teaching.
+
+The Golden Nugget must be:
+
+- Memorable.
+- Spiritually insightful.
+- Easy to meditate on throughout the day.
+
+
+9. PRAYER / DECLARATION
+
+Write a prayer declaration that includes:
+
+- Thanksgiving to God.
+- Faith in God's Word.
+- Identity in Christ.
+- Dependence on the Holy Spirit.
+- A personal declaration of truth.
+
+
+10. APP LINK
+
+Include the official DNFC application link at the bottom of the devotional.
+
+
+11. HASHTAG
+
+Always include:
+
+#DNFC
+
+
+WRITING STANDARD:
+
+Every Daily Dose must be:
+
+- Biblical.
+- Christ-centred.
+- Revelation-focused.
+- Spiritually mature.
+- Practical and transformational.
+
+Avoid:
+
+- Generic motivational language.
+- Empty inspiration without Scripture.
+- Religious condemnation.
+- Teachings that contradict DNFC revelation.
+
+The devotional should read like a professionally prepared Kingdom teaching from DNFC.
