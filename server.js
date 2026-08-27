@@ -133,6 +133,65 @@ try {
     );
 
 }
+// ==============================
+// LOAD KINGDOM INSIGHTS
+// ==============================
+
+let kingdomInsights = "";
+
+try {
+
+    kingdomInsights = fs.readFileSync(
+        path.join(
+            __dirname,
+            "knowledge",
+            "kingdom-insights",
+            "kingdom-insights.txt"
+        ),
+        "utf8"
+    );
+
+    console.log(
+        "Kingdom insights loaded successfully."
+    );
+
+} catch(error){
+
+    console.error(
+        "Kingdom insights loading error:",
+        error.message
+    );
+
+}
+// ==============================
+// LOAD KINGDOM INSIGHTS
+// ==============================
+
+let kingdomInsights = "";
+
+try {
+    kingdomInsights = fs.readFileSync(
+        path.join(
+            __dirname,
+            "knowledge",
+            "kingdom-insights",
+            "kingdom-insights.txt"
+        ),
+        "utf8"
+    );
+
+    console.log(
+        "Kingdom insights loaded successfully."
+    );
+
+} catch(error){
+
+    console.error(
+        "Kingdom insights loading error:",
+        error.message
+    );
+
+}
 
 // ===============================
 // LOAD AI INSTRUCTIONS
@@ -226,6 +285,18 @@ ${instructions}
 DNFC KNOWLEDGE SOURCES:
 
 ${knowledge}
+
+
+========================
+DNFC REVELATIONS:
+
+${revelations}
+
+========================
+
+DNFC KINGDOM INSIGHTS:
+
+${kingdomInsights}
 
 
 ========================
