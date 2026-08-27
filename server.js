@@ -50,17 +50,33 @@ try {
         "dnfc-library.txt"
     );
 
-    const revelationsPath = path.join(
-        __dirname,
-        "knowledge",
-        "dnfc-revelations.txt"
-    );
+    const revelationsFolder = path.join(
+    __dirname,
+    "knowledge",
+    "revelations"
+);
 
+let revelations = "";
 
-    const library = fs.readFileSync(
-        libraryPath,
-        "utf8"
-    );
+const revelationFiles = fs.readdirSync(revelationsFolder);
+
+for (const file of revelationFiles) {
+    if (file.endsWith(".txt")) {
+        const filePath = path.join(
+            revelationsFolder,
+            file
+        );
+
+        const content = fs.readFileSync(
+            filePath,
+            "utf8"
+        );
+
+        revelations +=
+        "\n\n===== " + file.toUpperCase() + " =====\n\n" +
+        content;
+    }
+}
 
 
     const revelations = fs.readFileSync(
