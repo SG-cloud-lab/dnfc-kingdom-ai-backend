@@ -1,4 +1,4 @@
-fetch("daily-dose/current/today.json")
+fetch("current/today.json")
   .then(response => response.json())
   .then(devotion => {
 
