@@ -67,10 +67,14 @@ for (const file of revelationFiles) {
             file
         );
 
-        const content = fs.readFileSync(
-            filePath,
-            "utf8"
-        );
+        revelations = fs.readFileSync(
+    path.join(
+        __dirname,
+        "knowledge",
+        "dnfc-revelations.txt"
+    ),
+    "utf8"
+);
 
         revelations +=
         "\n\n===== " + file.toUpperCase() + " =====\n\n" +
