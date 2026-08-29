@@ -50,58 +50,68 @@ try {
         "dnfc-library.txt"
     );
 
-    const revelationsFolder = path.join(
-    __dirname,
-    "knowledge",
-    "revelations"
-);
-
-let revelations = "";
-
-const revelationFiles = fs.readdirSync(revelationsFolder);
-
-for (const file of revelationFiles) {
-    if (file.endsWith(".txt")) {
-        const filePath = path.join(
-            revelationsFolder,
-            file
-        );
-
-        revelations = fs.readFileSync(
-    path.join(
-        __dirname,
-        "knowledge",
-        "dnfc-revelations.txt"
-    ),
-    "utf8"
-);
-
-        revelations +=
-        "\n\n===== " + file.toUpperCase() + " =====\n\n" +
-        content;
-    }
-}
-
-
-    revelations = fs.readFileSync(
-        revelationsPath,
+    const library = fs.readFileSync(
+        libraryPath,
         "utf8"
     );
 
 
-    knowledge =
-"===== DNFC LIBRARY (BOOKS) =====\n\n" +
-library +
-"\n\n===== DNFC REVELATIONS =====\n\n" +
-revelations;
-
-
-    console.log(
-        "DNFC knowledge and revelations loaded successfully."
+    const revelationsFolder = path.join(
+        __dirname,
+        "knowledge",
+        "revelations"
     );
 
 
-} catch(error){
+    let revelations = "";
+
+
+    const revelationFiles = fs.readdirSync(
+        revelationsFolder
+    );
+
+
+    for (const file of revelationFiles) {
+
+        if (file.endsWith(".txt")) {
+
+            const filePath = path.join(
+                revelationsFolder,
+                file
+            );
+
+
+            const content = fs.readFileSync(
+                filePath,
+                "utf8"
+            );
+
+
+            revelations +=
+            "\n\n===== " +
+            file.toUpperCase() +
+            " =====\n\n" +
+            content;
+
+        }
+
+    }
+
+
+    knowledge =
+    "===== DNFC LIBRARY =====\n\n" +
+    library +
+    "\n\n===== DNFC REVELATIONS =====\n\n" +
+    revelations;
+
+
+    console.log(
+        "DNFC knowledge loaded successfully."
+    );
+
+
+}
+catch(error){
 
     console.error(
         "Knowledge loading error:",
@@ -109,6 +119,7 @@ revelations;
     );
 
 }
+
 // ===============================
 // LOAD DNFC REVELATIONS
 // ===============================
