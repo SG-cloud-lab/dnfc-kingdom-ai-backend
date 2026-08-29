@@ -352,6 +352,47 @@ try {
     }
 });
 
+// ==============================
+// LOAD CONVERSATIONS FROM FIREBASE
+// ==============================
+
+app.get("/conversations", async (req, res) => {
+
+    try {
+
+        const snapshot = await db
+            .collection("conversations")
+            .orderBy("createdAt", "desc")
+            .get();
+
+        let conversations = [];
+
+        snapshot.forEach((doc) => {
+
+            conversations.push({
+                id: doc.id,
+                ...doc.data()
+            });
+
+        });
+
+        res.json(conversations);
+
+    } catch (error) {
+
+        console.error(
+            "Conversation loading error:",
+            error.message
+        );
+
+        res.status(500).json({
+            error: error.message
+        });
+
+    }
+
+});
+
 
 // ===============================
 // START SERVER
