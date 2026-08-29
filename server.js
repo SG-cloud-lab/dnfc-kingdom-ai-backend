@@ -315,7 +315,28 @@ Give a detailed but understandable answer.
 
         const result = await model.generateContent(prompt);
         const answer = result.response.text();
+// ==============================
+// SAVE CHAT TO FIREBASE
+// ==============================
 
+try {
+
+    await db.collection("conversations").add({
+        question: question,
+        answer: answer,
+        createdAt: new Date()
+    });
+
+    console.log("Conversation saved to Firebase successfully.");
+
+} catch (firebaseError) {
+
+    console.error(
+        "Firebase save error:",
+        firebaseError.message
+    );
+
+}
         res.json({
             answer: answer
         });
