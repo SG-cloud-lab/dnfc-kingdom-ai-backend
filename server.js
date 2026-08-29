@@ -315,6 +315,8 @@ Give a detailed but understandable answer.
 
         const result = await model.generateContent(prompt);
         const answer = result.response.text();
+        console.log("QUESTION RECEIVED:", question);
+console.log("ANSWER GENERATED:", answer);
 // ==============================
 // SAVE CHAT TO FIREBASE
 // ==============================
