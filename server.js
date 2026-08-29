@@ -3,6 +3,7 @@ const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
+const admin = require("firebase-admin");
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
@@ -34,7 +35,21 @@ if (!process.env.GEMINI_API_KEY) {
 const genAI = new GoogleGenerativeAI(
     process.env.GEMINI_API_KEY
 );
+// ==============================
+// FIREBASE CONNECTION
+// ==============================
 
+const serviceAccount = JSON.parse(
+    process.env.FIREBASE_SERVICE_ACCOUNT
+);
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+
+const db = admin.firestore();
+
+console.log("Firebase connected successfully.");
 
 // ===============================
 // LOAD DNFC KNOWLEDGE LIBRARY
