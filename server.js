@@ -393,7 +393,76 @@ app.get("/conversations", async (req, res) => {
 
 });
 
+// ==============================
+// DAILY DEVOTIONS SYSTEM
+// ==============================
 
+// Save Daily Devotion
+app.post("/daily-devotions", async (req, res) => {
+
+    try {
+
+        const devotion = req.body;
+
+        await db.collection("daily-devotions").add(devotion);
+
+        res.json({
+            message: "Daily devotion saved successfully."
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Daily devotion save error:",
+            error.message
+        );
+
+        res.status(500).json({
+            error: error.message
+        });
+
+    }
+
+});
+
+
+// Get Published Daily Devotions
+app.get("/daily-devotions", async (req, res) => {
+
+    try {
+
+        const snapshot = await db
+            .collection("daily-devotions")
+            .where("status", "==", "published")
+            .get();
+
+        let devotions = [];
+
+        snapshot.forEach((doc) => {
+
+            devotions.push({
+                id: doc.id,
+                ...doc.data()
+            });
+
+        });
+
+        res.json(devotions);
+
+    } catch (error) {
+
+        console.error(
+            "Daily devotion loading error:",
+            error.message
+        );
+
+        res.status(500).json({
+            error: error.message
+        });
+
+    }
+
+});
 // ===============================
 // START SERVER
 // ===============================
