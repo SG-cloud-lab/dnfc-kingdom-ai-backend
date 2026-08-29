@@ -463,6 +463,42 @@ app.get("/daily-devotions", async (req, res) => {
     }
 
 });
+// ==============================
+// PUBLISH DAILY DEVOTION
+// ==============================
+
+app.patch("/daily-devotions/:id/publish", async (req, res) => {
+
+    try {
+
+        const devotionId = req.params.id;
+
+        await db
+            .collection("daily-devotions")
+            .doc(devotionId)
+            .update({
+                status: "published",
+                publishedAt: new Date()
+            });
+
+        res.json({
+            message: "Daily devotion published successfully."
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Publishing error:",
+            error.message
+        );
+
+        res.status(500).json({
+            error: error.message
+        });
+
+    }
+
+});
 // ===============================
 // START SERVER
 // ===============================
