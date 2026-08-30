@@ -9,18 +9,19 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
 
+
 // ===============================
-// MIDDLEWARE (CRITICAL FOR CORS)
+// MIDDLEWARE
 // ===============================
+
 app.use(cors({
     origin: "*",
-    methods: ["GET", "POST", "OPTIONS"],
+    methods: ["GET", "POST", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 app.use(express.json());
 
-// Handle preflight OPTIONS requests
 app.options("*", cors());
 
 
@@ -29,250 +30,483 @@ app.options("*", cors());
 // ===============================
 
 if (!process.env.GEMINI_API_KEY) {
-    console.error("FATAL: GEMINI_API_KEY missing");
+
+    console.error(
+        "FATAL: GEMINI_API_KEY missing"
+    );
+
 }
+
 
 const genAI = new GoogleGenerativeAI(
     process.env.GEMINI_API_KEY
 );
-// ==============================
+
+
+// ===============================
 // FIREBASE CONNECTION
-// ==============================
+// ===============================
+
 
 const serviceAccount = JSON.parse(
     process.env.FIREBASE_SERVICE_ACCOUNT
 );
 
+
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
+
+    credential:
+    admin.credential.cert(serviceAccount)
+
 });
+
 
 const db = admin.firestore();
 
-console.log("Firebase connected successfully.");
+
+console.log(
+    "Firebase connected successfully."
+);
+
+
+// ===============================
+// GEMINI FALLBACK SYSTEM
+// ===============================
+
+async function generateWithFallback(prompt){
+
+
+    const models = [
+
+        "gemini-3.6-flash",
+
+        "gemini-2.5-flash"
+
+    ];
+
+
+    let lastError;
+
+
+
+    for(const modelName of models){
+
+
+        try{
+
+
+            console.log(
+                "Trying model:",
+                modelName
+            );
+
+
+            const model =
+            genAI.getGenerativeModel({
+
+                model:modelName
+
+            });
+
+
+
+            const result =
+            await model.generateContent(prompt);
+
+
+
+            return result.response.text();
+
+
+
+        }catch(error){
+
+
+            console.log(
+
+                modelName + " failed:",
+
+                error.message
+
+            );
+
+
+            lastError = error;
+
+
+        }
+
+
+    }
+
+
+    throw lastError;
+
+
+}
+
 
 // ===============================
 // LOAD DNFC KNOWLEDGE LIBRARY
 // ===============================
 
+
 let knowledge = "";
+
 
 try {
 
+
     const libraryPath = path.join(
+
         __dirname,
+
         "knowledge",
+
         "dnfc-library.txt"
+
     );
 
-    const library = fs.readFileSync(
+
+    const library =
+    fs.readFileSync(
+
         libraryPath,
+
         "utf8"
+
     );
 
 
-    const revelationsFolder = path.join(
+
+    const revelationsFolder =
+    path.join(
+
         __dirname,
+
         "knowledge",
+
         "revelations"
+
     );
 
 
-    let revelations = "";
+
+    let revelationContent = "";
 
 
-    const revelationFiles = fs.readdirSync(
+
+    const revelationFiles =
+    fs.readdirSync(
+
         revelationsFolder
+
     );
 
 
-    for (const file of revelationFiles) {
 
-        if (file.endsWith(".txt")) {
+    for(const file of revelationFiles){
 
-            const filePath = path.join(
+
+        if(file.endsWith(".txt")){
+
+
+            const filePath =
+            path.join(
+
                 revelationsFolder,
+
                 file
+
             );
 
 
-            const content = fs.readFileSync(
+
+            const content =
+            fs.readFileSync(
+
                 filePath,
+
                 "utf8"
+
             );
 
 
-            revelations +=
+
+            revelationContent +=
+
             "\n\n===== " +
             file.toUpperCase() +
             " =====\n\n" +
+
             content;
 
+
         }
+
 
     }
 
 
+
     knowledge =
+
     "===== DNFC LIBRARY =====\n\n" +
+
     library +
+
     "\n\n===== DNFC REVELATIONS =====\n\n" +
-    revelations;
+
+    revelationContent;
+
 
 
     console.log(
+
         "DNFC knowledge loaded successfully."
+
     );
 
 
 }
 catch(error){
 
+
     console.error(
+
         "Knowledge loading error:",
+
         error.message
+
     );
 
+
 }
+
 
 // ===============================
 // LOAD DNFC REVELATIONS
 // ===============================
 
+
 let revelations = "";
 
-try {
-    revelations = fs.readFileSync(
+
+try{
+
+
+    revelations =
+    fs.readFileSync(
+
         path.join(
+
             __dirname,
+
             "knowledge",
+
             "dnfc-revelations.txt"
+
         ),
+
         "utf8"
+
     );
+
 
     console.log(
+
         "DNFC revelations loaded successfully."
+
     );
 
-} catch(error){
-
-    console.error(
-        "Revelations loading error:",
-        error.message
-    );
 
 }
+catch(error){
 
+
+    console.error(
+
+        "Revelations loading error:",
+
+        error.message
+
+    );
+
+
+        }
 // ==============================
 // LOAD KINGDOM INSIGHTS
 // ==============================
 
 let kingdomInsights = "";
 
+
 try {
-    kingdomInsights = fs.readFileSync(
+
+
+    kingdomInsights =
+    fs.readFileSync(
+
         path.join(
+
             __dirname,
+
             "knowledge",
+
             "kingdom-insights",
+
             "kingdom-insights.txt"
+
         ),
+
         "utf8"
+
     );
+
 
     console.log(
+
         "Kingdom insights loaded successfully."
+
     );
 
-} catch(error){
-
-    console.error(
-        "Kingdom insights loading error:",
-        error.message
-    );
 
 }
+catch(error){
+
+
+    console.error(
+
+        "Kingdom insights loading error:",
+
+        error.message
+
+    );
+
+
+}
+
 
 // ===============================
 // LOAD AI INSTRUCTIONS
 // ===============================
 
+
 let instructions = "";
 
-try {
-    instructions = fs.readFileSync(
+
+try{
+
+
+    instructions =
+    fs.readFileSync(
+
         path.join(
+
             __dirname,
+
             "dnfc-ai-instructions.txt"
+
         ),
+
         "utf8"
+
     );
+
 
     console.log(
+
         "DNFC AI instructions loaded successfully."
+
     );
 
-} catch(error){
-    console.error(
-        "Instructions loading error:",
-        error.message
-    );
+
 }
+catch(error){
+
+
+    console.error(
+
+        "Instructions loading error:",
+
+        error.message
+
+    );
+
+
+}
+
 
 
 // ===============================
 // TEST ROUTE
 // ===============================
 
-app.get("/", (req, res) => {
-    res.send("DNFC Kingdom AI Backend is Live.");
+
+app.get("/", (req,res)=>{
+
+
+    res.send(
+        "DNFC Kingdom AI Backend is Live."
+    );
+
+
 });
+
 
 
 // ===============================
 // AI QUESTION ROUTE
 // ===============================
 
-app.post("/ask", async (req, res) => {
-    console.log("ASK ROUTE REACHED");
 
-    const question = req.body.question;
+app.post("/ask", async (req,res)=>{
 
-    if (!question) {
+
+    console.log(
+        "ASK ROUTE REACHED"
+    );
+
+
+    const question =
+    req.body.question;
+
+
+
+    if(!question){
+
+
         return res.status(400).json({
-            error: "Please provide a question"
+
+            error:
+            "Please provide a question"
+
         });
+
+
     }
 
-    try {
-        // Updated to a valid model identifier
-        const model = genAI.getGenerativeModel({
-    model: "gemini-3.6-flash"
-});
+
+
+    try{
+
 
         const prompt = `
+
 You are DNFC Kingdom AI.
 
 You are not a general chatbot.
 
-Your primary purpose is to teach according to the DNFC Kingdom AI knowledge library and instructions.
+Your purpose is to teach according to the DNFC Kingdom AI knowledge library and instructions.
 
-IMPORTANT RULES:
+Always follow DNFC instructions first.
 
-1. Always check and follow the DNFC instructions first.
+Use DNFC knowledge sources as the first source of truth.
 
-2. Always use the DNFC knowledge library as your first source of truth.
+Keep answers biblical, spiritual, clear and mature.
 
-3. Do not contradict DNFC teachings.
+Focus on Christ, the finished work of Christ, the Holy Spirit, identity in Christ, and God's eternal purpose.
 
-4. If the answer exists in the DNFC library, answer from the library.
-
-5. Only use general Gemini knowledge when the DNFC library does not contain enough information.
-
-6. Keep answers biblical, spiritual, clear and mature.
-
-7. When explaining Scripture, focus on Christ, the finished work of Christ, the Holy Spirit, identity in Christ, and God's eternal purpose.
 
 ========================
 
@@ -283,15 +517,17 @@ ${instructions}
 
 ========================
 
-DNFC KNOWLEDGE SOURCES:
+DNFC KNOWLEDGE:
 
 ${knowledge}
 
 
 ========================
+
 DNFC REVELATIONS:
 
 ${revelations}
+
 
 ========================
 
@@ -302,189 +538,206 @@ ${kingdomInsights}
 
 ========================
 
-
 USER QUESTION:
 
 ${question}
 
 
 Give a detailed but understandable answer.
+
 `;
 
-        console.log("Sending request to Gemini...");
 
-        const result = await model.generateContent(prompt);
-        const answer = result.response.text();
-        console.log("QUESTION RECEIVED:", question);
-console.log("ANSWER GENERATED:", answer);
-// ==============================
-// SAVE CHAT TO FIREBASE
-// ==============================
 
-try {
+        console.log(
+            "Sending request to Gemini..."
+        );
 
-    await db.collection("conversations").add({
-        question: question,
-        answer: answer,
-        createdAt: new Date()
-    });
 
-    console.log("Conversation saved to Firebase successfully.");
 
-} catch (firebaseError) {
+        const answer =
+        await generateWithFallback(prompt);
 
-    console.error(
-        "Firebase save error:",
-        firebaseError.message
-    );
 
-}
+
+        await db
+        .collection("conversations")
+        .add({
+
+            question:question,
+
+            answer:answer,
+
+            createdAt:new Date()
+
+        });
+
+
+
         res.json({
-            answer: answer
+
+            answer:answer
+
         });
 
-    } catch (error) {
-        console.error("GEMINI ERROR:", error);
-        res.status(500).json({
-            error: "AI Service failed",
-            details: error.message
-        });
+
+
     }
+    catch(error){
+
+
+        console.error(
+
+            "GEMINI ERROR:",
+
+            error
+
+        );
+
+
+        res.status(500).json({
+
+            error:
+            "AI Service failed",
+
+            details:
+            error.message
+
+        });
+
+
+    }
+
+
 });
 
+
+
+
 // ==============================
-// LOAD CONVERSATIONS FROM FIREBASE
+// LOAD CONVERSATIONS
 // ==============================
 
-app.get("/conversations", async (req, res) => {
 
-    try {
+app.get("/conversations", async(req,res)=>{
 
-        const snapshot = await db
-            .collection("conversations")
-            .orderBy("createdAt", "desc")
-            .get();
+
+    try{
+
+
+        const snapshot =
+        await db
+
+        .collection("conversations")
+
+        .orderBy(
+            "createdAt",
+            "desc"
+        )
+
+        .get();
+
+
 
         let conversations = [];
 
-        snapshot.forEach((doc) => {
+
+
+        snapshot.forEach(doc=>{
+
 
             conversations.push({
-                id: doc.id,
+
+                id:doc.id,
+
                 ...doc.data()
+
             });
 
+
         });
+
+
 
         res.json(conversations);
 
-    } catch (error) {
 
-        console.error(
-            "Conversation loading error:",
-            error.message
-        );
+
+    }
+    catch(error){
+
 
         res.status(500).json({
-            error: error.message
+
+            error:error.message
+
         });
+
 
     }
 
+
 });
+
+
+
 // ==============================
 // AI DAILY DEVOTION GENERATOR
 // ==============================
 
-app.post("/generate-devotions", async (req, res) => {
 
-    const theme = req.body.theme;
-    const days = req.body.days || 7;
+app.post("/generate-devotions", async(req,res)=>{
+
+
+    const theme =
+    req.body.theme;
+
+
+    const days =
+    req.body.days || 7;
+
 
 
     if(!theme){
 
+
         return res.status(400).json({
-            error:"Please provide a devotion theme"
+
+            error:
+            "Please provide a devotion theme"
+
         });
 
-    }
-
-
-    try {
-
-
-        async function generateWithFallback(prompt){
-
-    const models = [
-        "gemini-3.6-flash",
-        "gemini-2.5-flash"
-    ];
-
-    let lastError;
-
-
-    for(const modelName of models){
-
-        try{
-
-            const model = genAI.getGenerativeModel({
-                model:modelName
-            });
-
-            const text = await generateWithFallback(prompt);
-
-
-        }catch(error){
-
-            console.log(
-                modelName + " failed:",
-                error.message
-            );
-
-            lastError = error;
-
-        }
 
     }
 
 
-    throw lastError;
 
-        }
+    try{
 
 
         const prompt = `
 
 You are DNFC Kingdom AI Daily Devotion Generator.
 
-Your task is to create ${days} daily devotions based on this theme:
+Create ${days} daily devotions based on this theme:
 
-THEME:
 ${theme}
 
 
-Use only the DNFC knowledge, revelations, kingdom insights and instructions provided.
+Use DNFC knowledge, revelations, kingdom insights and instructions.
 
 Each devotion must contain:
 
-- title
-- scripture
-- verseText
-- teaching (3 to 5 paragraphs)
-- goldenNugget
-- prayer
-- furtherStudy
-- theme
-- day number
-
-
-The writing style must reflect DNFC teachings:
-- Christ-centered
-- revelation knowledge
-- identity in Christ
-- Holy Spirit consciousness
-- God's eternal purpose
+title
+scripture
+verseText
+teaching (3-5 paragraphs)
+goldenNugget
+prayer
+furtherStudy
+theme
+day
 
 
 Return ONLY valid JSON.
@@ -497,9 +750,9 @@ Format:
 "scripture":"",
 "verseText":"",
 "teaching":[
-"paragraph 1",
-"paragraph 2",
-"paragraph 3"
+"Paragraph 1",
+"Paragraph 2",
+"Paragraph 3"
 ],
 "goldenNugget":"",
 "prayer":"",
@@ -535,20 +788,21 @@ ${kingdomInsights}
 
 
 
-        const result = await model.generateContent(prompt);
+        const text =
+        await generateWithFallback(prompt);
 
 
-        const text = result.response.text();
 
-
-        const cleanJSON = text
+        const cleanJSON =
+        text
         .replace(/```json/g,"")
         .replace(/```/g,"")
         .trim();
 
 
 
-        const devotions = JSON.parse(cleanJSON);
+        const devotions =
+        JSON.parse(cleanJSON);
 
 
 
@@ -556,7 +810,11 @@ ${kingdomInsights}
 
 
             await db
-            .collection("daily-devotions-drafts")
+
+            .collection(
+                "daily-devotions-drafts"
+            )
+
             .add({
 
                 ...devotion,
@@ -574,20 +832,86 @@ ${kingdomInsights}
 
         res.json({
 
-            message:"Devotions generated successfully",
+            message:
+            "Devotions generated successfully",
 
-            count:devotions.length
+            count:
+            devotions.length
 
         });
 
 
 
-    }catch(error){
+    }
+    catch(error){
 
 
         console.error(
+
             "Devotion generator error:",
+
             error.message
+
+        );
+
+
+
+        res.status(500).json({
+
+            error:error.message
+
+        });
+
+
+    }
+
+
+});
+// ==============================
+// DAILY DEVOTIONS SYSTEM
+// ==============================
+
+
+// Save Daily Devotion
+
+app.post("/daily-devotions", async(req,res)=>{
+
+
+    try{
+
+
+        const devotion =
+        req.body;
+
+
+
+        await db
+
+        .collection("daily-devotions")
+
+        .add(devotion);
+
+
+
+        res.json({
+
+            message:
+            "Daily devotion saved successfully."
+
+        });
+
+
+
+    }
+    catch(error){
+
+
+        console.error(
+
+            "Daily devotion save error:",
+
+            error.message
+
         );
 
 
@@ -603,124 +927,189 @@ ${kingdomInsights}
 
 });
 
+
+
+
 // ==============================
-// DAILY DEVOTIONS SYSTEM
+// GET PUBLISHED DAILY DEVOTIONS
 // ==============================
 
-// Save Daily Devotion
-app.post("/daily-devotions", async (req, res) => {
 
-    try {
-
-        const devotion = req.body;
-
-        await db.collection("daily-devotions").add(devotion);
-
-        res.json({
-            message: "Daily devotion saved successfully."
-        });
-
-    } catch (error) {
-
-        console.error(
-            "Daily devotion save error:",
-            error.message
-        );
-
-        res.status(500).json({
-            error: error.message
-        });
-
-    }
-
-});
+app.get("/daily-devotions", async(req,res)=>{
 
 
-// Get Published Daily Devotions
-app.get("/daily-devotions", async (req, res) => {
+    try{
 
-    try {
 
-        const snapshot = await db
-            .collection("daily-devotions")
-            .where("status", "==", "published")
-            .get();
+        const snapshot =
+        await db
+
+        .collection("daily-devotions")
+
+        .where(
+            "status",
+            "==",
+            "published"
+        )
+
+        .get();
+
+
 
         let devotions = [];
 
-        snapshot.forEach((doc) => {
+
+
+        snapshot.forEach(doc=>{
+
 
             devotions.push({
-                id: doc.id,
+
+                id:doc.id,
+
                 ...doc.data()
+
             });
 
+
         });
+
+
 
         res.json(devotions);
 
-    } catch (error) {
+
+
+    }
+    catch(error){
+
 
         console.error(
+
             "Daily devotion loading error:",
+
             error.message
+
         );
 
+
+
         res.status(500).json({
-            error: error.message
+
+            error:error.message
+
         });
+
 
     }
 
+
 });
+
+
+
+
+
 // ==============================
 // PUBLISH DAILY DEVOTION
 // ==============================
 
-app.patch("/daily-devotions/:id/publish", async (req, res) => {
 
-    try {
+app.patch(
+"/daily-devotions/:id/publish",
+async(req,res)=>{
 
-        const devotionId = req.params.id;
+
+    try{
+
+
+        const devotionId =
+        req.params.id;
+
+
 
         await db
-            .collection("daily-devotions")
-            .doc(devotionId)
-            .update({
-                status: "published",
-                publishedAt: new Date()
-            });
+
+        .collection("daily-devotions")
+
+        .doc(devotionId)
+
+        .update({
+
+            status:"published",
+
+            publishedAt:new Date()
+
+        });
+
+
 
         res.json({
-            message: "Daily devotion published successfully."
+
+            message:
+            "Daily devotion published successfully."
+
         });
 
-    } catch (error) {
+
+
+    }
+    catch(error){
+
 
         console.error(
+
             "Publishing error:",
+
             error.message
+
         );
 
+
+
         res.status(500).json({
-            error: error.message
+
+            error:error.message
+
         });
+
 
     }
 
+
 });
+
+
+
+
+
 // ===============================
 // START SERVER
 // ===============================
 
-const PORT = process.env.PORT || 10000;
+
+const PORT =
+process.env.PORT || 10000;
+
+
 
 app.listen(
+
     PORT,
+
     "0.0.0.0",
-    () => {
+
+    ()=>{
+
+
         console.log(
-            "DNFC Kingdom AI Server running on port " + PORT
+
+            "DNFC Kingdom AI Server running on port "
+            + PORT
+
         );
+
+
     }
+
 );
