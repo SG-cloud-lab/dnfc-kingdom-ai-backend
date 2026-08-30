@@ -918,8 +918,62 @@ app.get("/daily-devotions-drafts", async(req,res)=>{
         });
 
     }
+app.get("/daily-devotions-drafts", ...)
+});
+// ==============================
+// GET SINGLE DEVOTION DRAFT
+// ==============================
+
+app.get("/daily-devotions-drafts/:id", async(req,res)=>{
+
+    try{
+
+        const id = req.params.id;
+
+
+        const doc =
+        await db
+        .collection("daily-devotions-drafts")
+        .doc(id)
+        .get();
+
+
+
+        if(!doc.exists){
+
+            return res.status(404).json({
+                error:"Draft not found"
+            });
+
+        }
+
+
+
+        res.json({
+
+            id:doc.id,
+            ...doc.data()
+
+        });
+
+
+    }
+    catch(error){
+
+        console.error(
+            "Single draft loading error:",
+            error.message
+        );
+
+
+        res.status(500).json({
+            error:error.message
+        });
+
+    }
 
 });
+
 
 // ==============================
 // APPROVE DAILY DEVOTION DRAFT
