@@ -922,6 +922,104 @@ app.get("/daily-devotions-drafts", async(req,res)=>{
 });
 
 // ==============================
+// APPROVE DAILY DEVOTION DRAFT
+// ==============================
+
+app.patch("/daily-devotions-drafts/:id/approve", async(req,res)=>{
+
+    try{
+
+
+        const draftId = req.params.id;
+
+
+        // Get draft
+
+        const draftDoc =
+        await db
+        .collection("daily-devotions-drafts")
+        .doc(draftId)
+        .get();
+
+
+
+        if(!draftDoc.exists){
+
+            return res.status(404).json({
+
+                error:"Draft not found"
+
+            });
+
+        }
+
+
+
+        const devotion =
+        draftDoc.data();
+
+
+
+        // Save as published devotion
+
+        await db
+        .collection("daily-devotions")
+        .add({
+
+            ...devotion,
+
+            status:"published",
+
+            approvedAt:new Date()
+
+        });
+
+
+
+        // Remove from drafts
+
+        await db
+        .collection("daily-devotions-drafts")
+        .doc(draftId)
+        .delete();
+
+
+
+        res.json({
+
+            message:
+            "Devotion approved and published successfully."
+
+        });
+
+
+
+    }
+    catch(error){
+
+
+        console.error(
+
+            "Approval error:",
+
+            error.message
+
+        );
+
+
+        res.status(500).json({
+
+            error:error.message
+
+        });
+
+
+    }
+
+
+});
+
+// ==============================
 // DAILY DEVOTIONS SYSTEM
 // ==============================
 
