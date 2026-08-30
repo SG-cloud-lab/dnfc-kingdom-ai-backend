@@ -392,6 +392,182 @@ app.get("/conversations", async (req, res) => {
     }
 
 });
+// ==============================
+// AI DAILY DEVOTION GENERATOR
+// ==============================
+
+app.post("/generate-devotions", async (req, res) => {
+
+    const theme = req.body.theme;
+    const days = req.body.days || 7;
+
+
+    if(!theme){
+
+        return res.status(400).json({
+            error:"Please provide a devotion theme"
+        });
+
+    }
+
+
+    try {
+
+
+        const model = genAI.getGenerativeModel({
+            model:"gemini-3.6-flash"
+        });
+
+
+
+        const prompt = `
+
+You are DNFC Kingdom AI Daily Devotion Generator.
+
+Your task is to create ${days} daily devotions based on this theme:
+
+THEME:
+${theme}
+
+
+Use only the DNFC knowledge, revelations, kingdom insights and instructions provided.
+
+Each devotion must contain:
+
+- title
+- scripture
+- verseText
+- teaching (3 to 5 paragraphs)
+- goldenNugget
+- prayer
+- furtherStudy
+- theme
+- day number
+
+
+The writing style must reflect DNFC teachings:
+- Christ-centered
+- revelation knowledge
+- identity in Christ
+- Holy Spirit consciousness
+- God's eternal purpose
+
+
+Return ONLY valid JSON.
+
+Format:
+
+[
+{
+"title":"",
+"scripture":"",
+"verseText":"",
+"teaching":[
+"paragraph 1",
+"paragraph 2",
+"paragraph 3"
+],
+"goldenNugget":"",
+"prayer":"",
+"furtherStudy":[
+"Romans 5:17"
+],
+"theme":"${theme}",
+"day":1
+}
+]
+
+
+DNFC AI INSTRUCTIONS:
+
+${instructions}
+
+
+DNFC KNOWLEDGE:
+
+${knowledge}
+
+
+DNFC REVELATIONS:
+
+${revelations}
+
+
+KINGDOM INSIGHTS:
+
+${kingdomInsights}
+
+`;
+
+
+
+        const result = await model.generateContent(prompt);
+
+
+        const text = result.response.text();
+
+
+        const cleanJSON = text
+        .replace(/```json/g,"")
+        .replace(/```/g,"")
+        .trim();
+
+
+
+        const devotions = JSON.parse(cleanJSON);
+
+
+
+        for(const devotion of devotions){
+
+
+            await db
+            .collection("daily-devotions-drafts")
+            .add({
+
+                ...devotion,
+
+                status:"draft",
+
+                createdAt:new Date()
+
+            });
+
+
+        }
+
+
+
+        res.json({
+
+            message:"Devotions generated successfully",
+
+            count:devotions.length
+
+        });
+
+
+
+    }catch(error){
+
+
+        console.error(
+            "Devotion generator error:",
+            error.message
+        );
+
+
+        res.status(500).json({
+
+            error:error.message
+
+        });
+
+
+    }
+
+
+});
 
 // ==============================
 // DAILY DEVOTIONS SYSTEM
