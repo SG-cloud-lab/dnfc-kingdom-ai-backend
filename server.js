@@ -414,10 +414,44 @@ app.post("/generate-devotions", async (req, res) => {
     try {
 
 
-        const model = genAI.getGenerativeModel({
-            model:"gemini-3.6-flash"
-        });
+        async function generateWithFallback(prompt){
 
+    const models = [
+        "gemini-3.6-flash",
+        "gemini-2.5-flash"
+    ];
+
+    let lastError;
+
+
+    for(const modelName of models){
+
+        try{
+
+            const model = genAI.getGenerativeModel({
+                model:modelName
+            });
+
+            const text = await generateWithFallback(prompt);
+
+
+        }catch(error){
+
+            console.log(
+                modelName + " failed:",
+                error.message
+            );
+
+            lastError = error;
+
+        }
+
+    }
+
+
+    throw lastError;
+
+        }
 
 
         const prompt = `
