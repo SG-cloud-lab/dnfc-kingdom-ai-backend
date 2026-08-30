@@ -1134,7 +1134,96 @@ app.post("/daily-devotions", async(req,res)=>{
 });
 
 
+// ==============================
+// GET ALL PUBLISHED DEVOTIONS FOR ADMIN
+// ==============================
 
+app.get("/admin/published-devotions", async(req,res)=>{
+
+    try{
+
+        const snapshot =
+        await db
+        .collection("daily-devotions")
+        .orderBy("publishedAt","desc")
+        .get();
+
+
+        let devotions = [];
+
+
+        snapshot.forEach(doc=>{
+
+            devotions.push({
+
+                id:doc.id,
+
+                ...doc.data()
+
+            });
+
+        });
+
+
+        res.json(devotions);
+
+
+    }
+    catch(error){
+
+        console.error(
+            "Published devotion loading error:",
+            error.message
+        );
+
+
+        res.status(500).json({
+
+            error:error.message
+
+        });
+
+    }
+
+});
+
+
+// ==============================
+// DELETE PUBLISHED DEVOTION
+// ==============================
+
+app.delete("/daily-devotions/:id", async(req,res)=>{
+
+    try{
+
+        const id = req.params.id;
+
+
+        await db
+        .collection("daily-devotions")
+        .doc(id)
+        .delete();
+
+
+        res.json({
+
+            message:"Devotion deleted successfully"
+
+        });
+
+
+    }
+    catch(error){
+
+        res.status(500).json({
+
+            error:error.message
+
+        });
+
+    }
+
+});
 
 // ==============================
 // GET PUBLISHED DAILY DEVOTIONS
