@@ -1214,7 +1214,86 @@ app.get("/daily-devotions", async(req,res)=>{
 
 
 
+// ==============================
+// APPROVE DEVOTION DRAFT
+// ==============================
 
+app.patch("/daily-devotions-drafts/:id/approve", async(req,res)=>{
+
+    try{
+
+        const id = req.params.id;
+
+
+        const draftDoc =
+        await db
+        .collection("daily-devotions-drafts")
+        .doc(id)
+        .get();
+
+
+
+        if(!draftDoc.exists){
+
+            return res.status(404).json({
+                error:"Draft not found"
+            });
+
+        }
+
+
+
+        const devotion =
+        draftDoc.data();
+
+
+
+        await db
+        .collection("daily-devotions")
+        .add({
+
+            ...devotion,
+
+            status:"published",
+
+            publishedAt:new Date()
+
+        });
+
+
+
+        await db
+        .collection("daily-devotions-drafts")
+        .doc(id)
+        .delete();
+
+
+
+        res.json({
+
+            message:"Devotion approved successfully"
+
+        });
+
+
+    }
+    catch(error){
+
+        console.error(
+            "Approval error:",
+            error.message
+        );
+
+
+        res.status(500).json({
+
+            error:error.message
+
+        });
+
+    }
+
+});
 
 // ==============================
 // PUBLISH DAILY DEVOTION
