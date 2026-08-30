@@ -867,6 +867,60 @@ ${kingdomInsights}
 
 
 });
+
+// ==============================
+// GET DAILY DEVOTION DRAFTS
+// ==============================
+
+app.get("/daily-devotions-drafts", async(req,res)=>{
+
+    try{
+
+        const snapshot =
+        await db
+        .collection("daily-devotions-drafts")
+        .orderBy("createdAt","desc")
+        .get();
+
+
+        let drafts = [];
+
+
+        snapshot.forEach(doc=>{
+
+            drafts.push({
+
+                id:doc.id,
+
+                ...doc.data()
+
+            });
+
+        });
+
+
+        res.json(drafts);
+
+
+    }
+    catch(error){
+
+        console.error(
+            "Draft loading error:",
+            error.message
+        );
+
+
+        res.status(500).json({
+
+            error:error.message
+
+        });
+
+    }
+
+});
+
 // ==============================
 // DAILY DEVOTIONS SYSTEM
 // ==============================
