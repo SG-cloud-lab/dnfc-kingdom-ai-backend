@@ -918,7 +918,7 @@ app.get("/daily-devotions-drafts", async(req,res)=>{
         });
 
     }
-app.get("/daily-devotions-drafts", ...)
+
 });
 // ==============================
 // GET SINGLE DEVOTION DRAFT
