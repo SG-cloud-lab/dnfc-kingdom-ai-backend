@@ -1192,10 +1192,7 @@ status:"published",
 
 publishDate:
 
-devotion.publishDate ||
-
-new Date(),
-
+req.body.publishDate || devotion.publishDate || new Date(),
 
 
 approvedAt:
