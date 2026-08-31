@@ -1143,10 +1143,9 @@ app.get("/admin/published-devotions", async(req,res)=>{
     try{
 
         const snapshot =
-        await db
-        .collection("daily-devotions")
-        .orderBy("publishedAt","desc")
-        .get();
+await db
+.collection("daily-devotions")
+.get();
 
 
         let devotions = [];
