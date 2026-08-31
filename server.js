@@ -1246,6 +1246,43 @@ error:error.message
 
 
 });
+// UPDATE DAILY DEVOTION DRAFT
+
+app.patch(
+"/daily-devotions-drafts/:id",
+async(req,res)=>{
+
+try{
+
+
+await db
+.collection("daily-devotions-drafts")
+.doc(req.params.id)
+.update(req.body);
+
+
+
+res.json({
+message:"Devotion updated successfully"
+});
+
+
+}
+catch(error){
+
+
+console.log(error);
+
+
+res.status(500).json({
+error:error.message
+});
+
+
+}
+
+
+});
 // ===============================
 // GET SINGLE PUBLISHED DEVOTION
 // ===============================
