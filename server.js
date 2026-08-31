@@ -3,33 +3,56 @@ const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
+
 const admin = require("firebase-admin");
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
+
 const app = express();
+
 
 
 // ===============================
 // MIDDLEWARE
 // ===============================
 
+
 app.use(cors({
-    origin: "*",
-    methods: ["GET", "POST", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
+
+    origin:"*",
+
+    methods:[
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE",
+        "OPTIONS"
+    ],
+
+    allowedHeaders:[
+        "Content-Type",
+        "Authorization"
+    ]
+
 }));
+
 
 app.use(express.json());
 
+
 app.options("*", cors());
+
+
+
 
 
 // ===============================
 // GEMINI CONNECTION
 // ===============================
 
-if (!process.env.GEMINI_API_KEY) {
+
+if(!process.env.GEMINI_API_KEY){
 
     console.error(
         "FATAL: GEMINI_API_KEY missing"
@@ -38,9 +61,14 @@ if (!process.env.GEMINI_API_KEY) {
 }
 
 
-const genAI = new GoogleGenerativeAI(
+
+const genAI =
+new GoogleGenerativeAI(
     process.env.GEMINI_API_KEY
 );
+
+
+
 
 
 // ===============================
@@ -48,20 +76,27 @@ const genAI = new GoogleGenerativeAI(
 // ===============================
 
 
-const serviceAccount = JSON.parse(
+const serviceAccount =
+JSON.parse(
     process.env.FIREBASE_SERVICE_ACCOUNT
 );
+
 
 
 admin.initializeApp({
 
     credential:
-    admin.credential.cert(serviceAccount)
+    admin.credential.cert(
+        serviceAccount
+    )
 
 });
 
 
-const db = admin.firestore();
+
+const db =
+admin.firestore();
+
 
 
 console.log(
@@ -69,9 +104,13 @@ console.log(
 );
 
 
+
+
+
 // ===============================
 // GEMINI FALLBACK SYSTEM
 // ===============================
+
 
 async function generateWithFallback(prompt){
 
@@ -83,6 +122,7 @@ async function generateWithFallback(prompt){
         "gemini-2.5-flash"
 
     ];
+
 
 
     let lastError;
@@ -101,6 +141,7 @@ async function generateWithFallback(prompt){
             );
 
 
+
             const model =
             genAI.getGenerativeModel({
 
@@ -111,7 +152,9 @@ async function generateWithFallback(prompt){
 
 
             const result =
-            await model.generateContent(prompt);
+            await model.generateContent(
+                prompt
+            );
 
 
 
@@ -119,13 +162,14 @@ async function generateWithFallback(prompt){
 
 
 
-        }catch(error){
+        }
+        catch(error){
 
 
             console.log(
 
-                modelName + " failed:",
-
+                modelName +
+                " failed:",
                 error.message
 
             );
@@ -146,6 +190,9 @@ async function generateWithFallback(prompt){
 }
 
 
+
+
+
 // ===============================
 // LOAD DNFC KNOWLEDGE LIBRARY
 // ===============================
@@ -154,10 +201,12 @@ async function generateWithFallback(prompt){
 let knowledge = "";
 
 
-try {
+
+try{
 
 
-    const libraryPath = path.join(
+    const libraryPath =
+    path.join(
 
         __dirname,
 
@@ -168,6 +217,7 @@ try {
     );
 
 
+
     const library =
     fs.readFileSync(
 
@@ -176,6 +226,11 @@ try {
         "utf8"
 
     );
+
+
+
+
+    let revelationsContent = "";
 
 
 
@@ -192,60 +247,53 @@ try {
 
 
 
-    let revelationContent = "";
+    if(fs.existsSync(revelationsFolder)){
+
+
+        const files =
+        fs.readdirSync(
+            revelationsFolder
+        );
 
 
 
-    const revelationFiles =
-    fs.readdirSync(
-
-        revelationsFolder
-
-    );
+        for(const file of files){
 
 
-
-    for(const file of revelationFiles){
-
-
-        if(file.endsWith(".txt")){
+            if(file.endsWith(".txt")){
 
 
-            const filePath =
-            path.join(
+                const content =
+                fs.readFileSync(
 
-                revelationsFolder,
+                    path.join(
+                        revelationsFolder,
+                        file
+                    ),
 
-                file
+                    "utf8"
 
-            );
+                );
 
 
 
-            const content =
-            fs.readFileSync(
+                revelationsContent +=
 
-                filePath,
+                "\n\n===== " +
+                file.toUpperCase() +
+                " =====\n\n" +
 
-                "utf8"
-
-            );
-
+                content;
 
 
-            revelationContent +=
-
-            "\n\n===== " +
-            file.toUpperCase() +
-            " =====\n\n" +
-
-            content;
+            }
 
 
         }
 
 
     }
+
 
 
 
@@ -257,15 +305,15 @@ try {
 
     "\n\n===== DNFC REVELATIONS =====\n\n" +
 
-    revelationContent;
+    revelationsContent;
+
 
 
 
     console.log(
-
         "DNFC knowledge loaded successfully."
-
     );
+
 
 
 }
@@ -284,12 +332,20 @@ catch(error){
 }
 
 
+
+
+
 // ===============================
-// LOAD DNFC REVELATIONS
+// LOAD OTHER KNOWLEDGE FILES
 // ===============================
 
 
 let revelations = "";
+
+let kingdomInsights = "";
+
+let instructions = "";
+
 
 
 try{
@@ -313,35 +369,19 @@ try{
     );
 
 
-    console.log(
-
-        "DNFC revelations loaded successfully."
-
-    );
-
-
 }
 catch(error){
 
-
-    console.error(
-
-        "Revelations loading error:",
-
-        error.message
-
+    console.log(
+        "No revelations file loaded."
     );
 
-
-        }
-// ==============================
-// LOAD KINGDOM INSIGHTS
-// ==============================
-
-let kingdomInsights = "";
+}
 
 
-try {
+
+
+try{
 
 
     kingdomInsights =
@@ -364,35 +404,17 @@ try {
     );
 
 
-    console.log(
-
-        "Kingdom insights loaded successfully."
-
-    );
-
-
 }
 catch(error){
 
-
-    console.error(
-
-        "Kingdom insights loading error:",
-
-        error.message
-
+    console.log(
+        "No kingdom insights file loaded."
     );
-
 
 }
 
 
-// ===============================
-// LOAD AI INSTRUCTIONS
-// ===============================
 
-
-let instructions = "";
 
 
 try{
@@ -414,30 +436,14 @@ try{
     );
 
 
-    console.log(
-
-        "DNFC AI instructions loaded successfully."
-
-    );
-
-
 }
 catch(error){
 
-
-    console.error(
-
-        "Instructions loading error:",
-
-        error.message
-
+    console.log(
+        "No AI instructions file loaded."
     );
 
-
 }
-
-
-
 // ===============================
 // TEST ROUTE
 // ===============================
@@ -455,17 +461,20 @@ app.get("/", (req,res)=>{
 
 
 
+
+
 // ===============================
 // AI QUESTION ROUTE
 // ===============================
 
 
-app.post("/ask", async (req,res)=>{
+app.post("/ask", async(req,res)=>{
 
 
     console.log(
         "ASK ROUTE REACHED"
     );
+
 
 
     const question =
@@ -488,14 +497,14 @@ app.post("/ask", async (req,res)=>{
 
 
 
+
     try{
 
 
         const prompt = `
 
-You are DNFC Kingdom AI.
 
-You are not a general chatbot.
+You are DNFC Kingdom AI.
 
 Your purpose is to teach according to the DNFC Kingdom AI knowledge library and instructions.
 
@@ -508,11 +517,13 @@ Keep answers biblical, spiritual, clear and mature.
 Focus on Christ, the finished work of Christ, the Holy Spirit, identity in Christ, and God's eternal purpose.
 
 
+
 ========================
 
 DNFC AI INSTRUCTIONS:
 
 ${instructions}
+
 
 
 ========================
@@ -522,6 +533,7 @@ DNFC KNOWLEDGE:
 ${knowledge}
 
 
+
 ========================
 
 DNFC REVELATIONS:
@@ -529,11 +541,13 @@ DNFC REVELATIONS:
 ${revelations}
 
 
+
 ========================
 
-DNFC KINGDOM INSIGHTS:
+KINGDOM INSIGHTS:
 
 ${kingdomInsights}
+
 
 
 ========================
@@ -543,9 +557,12 @@ USER QUESTION:
 ${question}
 
 
+
 Give a detailed but understandable answer.
 
 `;
+
+
 
 
 
@@ -555,8 +572,13 @@ Give a detailed but understandable answer.
 
 
 
+
         const answer =
-        await generateWithFallback(prompt);
+        await generateWithFallback(
+            prompt
+        );
+
+
 
 
 
@@ -564,21 +586,36 @@ Give a detailed but understandable answer.
         .collection("conversations")
         .add({
 
-            question:question,
+            question:
 
-            answer:answer,
+            question,
 
-            createdAt:new Date()
+
+            answer:
+
+            answer,
+
+
+            createdAt:
+
+            new Date()
 
         });
+
+
+
 
 
 
         res.json({
 
-            answer:answer
+            answer:
+
+            answer
 
         });
+
+
 
 
 
@@ -586,13 +623,15 @@ Give a detailed but understandable answer.
     catch(error){
 
 
+
         console.error(
 
             "GEMINI ERROR:",
 
-            error
+            error.message
 
         );
+
 
 
         res.status(500).json({
@@ -606,6 +645,7 @@ Give a detailed but understandable answer.
         });
 
 
+
     }
 
 
@@ -614,9 +654,11 @@ Give a detailed but understandable answer.
 
 
 
-// ==============================
+
+
+// ===============================
 // LOAD CONVERSATIONS
-// ==============================
+// ===============================
 
 
 app.get("/conversations", async(req,res)=>{
@@ -626,20 +668,26 @@ app.get("/conversations", async(req,res)=>{
 
 
         const snapshot =
+
         await db
 
         .collection("conversations")
 
         .orderBy(
+
             "createdAt",
+
             "desc"
+
         )
 
         .get();
 
 
 
+
         let conversations = [];
+
 
 
 
@@ -648,18 +696,27 @@ app.get("/conversations", async(req,res)=>{
 
             conversations.push({
 
-                id:doc.id,
+                id:
+
+                doc.id,
+
 
                 ...doc.data()
 
             });
 
 
+
         });
 
 
 
-        res.json(conversations);
+
+
+        res.json(
+            conversations
+        );
+
 
 
 
@@ -667,23 +724,24 @@ app.get("/conversations", async(req,res)=>{
     catch(error){
 
 
+
         res.status(500).json({
 
-            error:error.message
+            error:
+
+            error.message
 
         });
+
 
 
     }
 
 
 });
-
-
-
-// ==============================
+// ===============================
 // AI DAILY DEVOTION GENERATOR
-// ==============================
+// ===============================
 
 
 app.post("/generate-devotions", async(req,res)=>{
@@ -713,56 +771,88 @@ app.post("/generate-devotions", async(req,res)=>{
 
 
 
+
     try{
 
 
         const prompt = `
 
+
 You are DNFC Kingdom AI Daily Devotion Generator.
 
+
 Create ${days} daily devotions based on this theme:
+
 
 ${theme}
 
 
-Use DNFC knowledge, revelations, kingdom insights and instructions.
 
 Each devotion must contain:
 
+
 title
+
+author
+
 scripture
+
 verseText
+
 teaching (3-5 paragraphs)
+
 goldenNugget
+
 prayer
+
 furtherStudy
+
 theme
+
 day
+
 
 
 Return ONLY valid JSON.
 
+
+
 Format:
+
 
 [
 {
+
 "title":"",
+
+"author":"Apostle Shemmy Gaviyao",
+
 "scripture":"",
+
 "verseText":"",
+
 "teaching":[
 "Paragraph 1",
 "Paragraph 2",
 "Paragraph 3"
 ],
+
 "goldenNugget":"",
+
 "prayer":"",
+
 "furtherStudy":[
 "Romans 5:17"
 ],
-"theme":"${theme}",
+
+"theme":"",
+
 "day":1
+
 }
+
 ]
+
 
 
 DNFC AI INSTRUCTIONS:
@@ -770,9 +860,11 @@ DNFC AI INSTRUCTIONS:
 ${instructions}
 
 
+
 DNFC KNOWLEDGE:
 
 ${knowledge}
+
 
 
 DNFC REVELATIONS:
@@ -780,29 +872,41 @@ DNFC REVELATIONS:
 ${revelations}
 
 
+
 KINGDOM INSIGHTS:
 
 ${kingdomInsights}
+
 
 `;
 
 
 
+
         const text =
-        await generateWithFallback(prompt);
+        await generateWithFallback(
+            prompt
+        );
+
 
 
 
         const cleanJSON =
         text
+
         .replace(/```json/g,"")
+
         .replace(/```/g,"")
+
         .trim();
+
 
 
 
         const devotions =
         JSON.parse(cleanJSON);
+
+
 
 
 
@@ -819,14 +923,20 @@ ${kingdomInsights}
 
                 ...devotion,
 
-                status:"draft",
 
-                createdAt:new Date()
+                status:
+                "draft",
+
+
+                createdAt:
+                new Date()
 
             });
 
 
+
         }
+
 
 
 
@@ -835,6 +945,7 @@ ${kingdomInsights}
             message:
             "Devotions generated successfully",
 
+
             count:
             devotions.length
 
@@ -842,8 +953,10 @@ ${kingdomInsights}
 
 
 
+
     }
     catch(error){
+
 
 
         console.error(
@@ -858,9 +971,12 @@ ${kingdomInsights}
 
         res.status(500).json({
 
-            error:error.message
+            error:
+
+            error.message
 
         });
+
 
 
     }
@@ -868,674 +984,784 @@ ${kingdomInsights}
 
 });
 
-// ==============================
-// GET DAILY DEVOTION DRAFTS
-// ==============================
+
+
+
+
+// ===============================
+// GET DEVOTION DRAFTS
+// ===============================
+
 
 app.get("/daily-devotions-drafts", async(req,res)=>{
 
-    try{
 
-        const snapshot =
-        await db
-        .collection("daily-devotions-drafts")
-        .orderBy("createdAt","desc")
-        .get();
+try{
 
 
-        let drafts = [];
+const snapshot =
 
-
-        snapshot.forEach(doc=>{
-
-            drafts.push({
-
-                id:doc.id,
-
-                ...doc.data()
-
-            });
-
-        });
-
-
-        res.json(drafts);
-
-
-    }
-    catch(error){
-
-        console.error(
-            "Draft loading error:",
-            error.message
-        );
-
-
-        res.status(500).json({
-
-            error:error.message
-
-        });
-
-    }
-
-});
-// ==============================
-// GET SINGLE DEVOTION DRAFT
-// ==============================
-
-app.get("/daily-devotions-drafts/:id", async(req,res)=>{
-
-    try{
-
-        const id = req.params.id;
-
-
-        const doc =
-        await db
-        .collection("daily-devotions-drafts")
-        .doc(id)
-        .get();
-
-
-
-        if(!doc.exists){
-
-            return res.status(404).json({
-                error:"Draft not found"
-            });
-
-        }
-
-
-
-        res.json({
-
-            id:doc.id,
-            ...doc.data()
-
-        });
-
-
-    }
-    catch(error){
-
-        console.error(
-            "Single draft loading error:",
-            error.message
-        );
-
-
-        res.status(500).json({
-            error:error.message
-        });
-
-    }
-
-});
-
-// ==============================
-// GET SINGLE PUBLISHED DEVOTION
-// ==============================
-
-app.get("/daily-devotions/:id", async(req,res)=>{
-
-    try{
-
-        const id = req.params.id;
-
-
-        const doc =
-        await db
-        .collection("daily-devotions")
-        .doc(id)
-        .get();
-
-
-        if(!doc.exists){
-
-            return res.status(404).json({
-                error:"Devotion not found"
-            });
-
-        }
-
-
-        res.json({
-
-            id:doc.id,
-            ...doc.data()
-
-        });
-
-
-    }
-    catch(error){
-
-        console.error(
-            "Published devotion loading error:",
-            error.message
-        );
-
-
-        res.status(500).json({
-
-            error:error.message
-
-        });
-
-    }
-
-});
-
-// ==============================
-// APPROVE DAILY DEVOTION DRAFT
-// ==============================
-
-app.patch("/daily-devotions-drafts/:id/approve", async(req,res)=>{
-
-    try{
-
-
-        const draftId = req.params.id;
-
-
-        // Get draft
-
-        const draftDoc =
-        await db
-        .collection("daily-devotions-drafts")
-        .doc(draftId)
-        .get();
-
-
-
-        if(!draftDoc.exists){
-
-            return res.status(404).json({
-
-                error:"Draft not found"
-
-            });
-
-        }
-
-
-
-        const devotion =
-        draftDoc.data();
-
-
-
-        // Save as published devotion
-
-        await db
-        .collection("daily-devotions")
-        .add({
-
-            ...devotion,
-
-            status:"published",
-
-            approvedAt:new Date()
-
-        });
-
-
-
-        // Remove from drafts
-
-        await db
-        .collection("daily-devotions-drafts")
-        .doc(draftId)
-        .delete();
-
-
-
-        res.json({
-
-            message:
-            "Devotion approved and published successfully."
-
-        });
-
-
-
-    }
-    catch(error){
-
-
-        console.error(
-
-            "Approval error:",
-
-            error.message
-
-        );
-
-
-        res.status(500).json({
-
-            error:error.message
-
-        });
-
-
-    }
-
-
-});
-
-// ==============================
-// DAILY DEVOTIONS SYSTEM
-// ==============================
-
-
-// Save Daily Devotion
-
-app.post("/daily-devotions", async(req,res)=>{
-
-
-    try{
-
-
-        const devotion =
-        req.body;
-
-
-
-        await db
-
-        .collection("daily-devotions")
-
-        .add(devotion);
-
-
-
-        res.json({
-
-            message:
-            "Daily devotion saved successfully."
-
-        });
-
-
-
-    }
-    catch(error){
-
-
-        console.error(
-
-            "Daily devotion save error:",
-
-            error.message
-
-        );
-
-
-        res.status(500).json({
-
-            error:error.message
-
-        });
-
-
-    }
-
-
-});
-
-
-// ==============================
-// GET ALL PUBLISHED DEVOTIONS FOR ADMIN
-// ==============================
-
-app.get("/admin/published-devotions", async(req,res)=>{
-
-    try{
-
-        const snapshot =
 await db
-.collection("daily-devotions")
+
+.collection("daily-devotions-drafts")
+
+.orderBy(
+"createdAt",
+"desc"
+)
+
 .get();
 
 
-        let devotions = [];
+
+let drafts = [];
 
 
-        snapshot.forEach(doc=>{
 
-            devotions.push({
-
-                id:doc.id,
-
-                ...doc.data()
-
-            });
-
-        });
+snapshot.forEach(doc=>{
 
 
-        res.json(devotions);
+drafts.push({
 
+id:doc.id,
 
-    }
-    catch(error){
-
-        console.error(
-            "Published devotion loading error:",
-            error.message
-        );
-
-
-        res.status(500).json({
-
-            error:error.message
-
-        });
-
-    }
+...doc.data()
 
 });
 
 
-// ==============================
-// DELETE PUBLISHED DEVOTION
-// ==============================
-
-app.delete("/daily-devotions/:id", async(req,res)=>{
-
-    try{
-
-        const id = req.params.id;
+});
 
 
-        await db
-        .collection("daily-devotions")
-        .doc(id)
-        .delete();
+
+res.json(drafts);
 
 
-        res.json({
 
-            message:"Devotion deleted successfully"
-
-        });
+}
+catch(error){
 
 
-    }
-    catch(error){
+res.status(500).json({
 
-        res.status(500).json({
-
-            error:error.message
-
-        });
-
-    }
+error:error.message
 
 });
 
-// ==============================
-// GET PUBLISHED DAILY DEVOTIONS
-// ==============================
+
+}
+
+
+});
+
+
+
+
+
+
+// ===============================
+// GET SINGLE DRAFT
+// ===============================
+
+
+app.get("/daily-devotions-drafts/:id", async(req,res)=>{
+
+
+try{
+
+
+const doc =
+
+await db
+
+.collection("daily-devotions-drafts")
+
+.doc(req.params.id)
+
+.get();
+
+
+
+if(!doc.exists){
+
+
+return res.status(404).json({
+
+error:"Draft not found"
+
+});
+
+
+}
+
+
+
+res.json({
+
+id:doc.id,
+
+...doc.data()
+
+});
+
+
+
+}
+catch(error){
+
+
+res.status(500).json({
+
+error:error.message
+
+});
+
+
+}
+
+
+});
+
+
+
+
+
+// ===============================
+// APPROVE AND PUBLISH DEVOTION
+// ===============================
+
+
+app.patch(
+"/daily-devotions-drafts/:id/approve",
+async(req,res)=>{
+
+
+try{
+
+
+const draftDoc =
+
+await db
+
+.collection("daily-devotions-drafts")
+
+.doc(req.params.id)
+
+.get();
+
+
+
+
+if(!draftDoc.exists){
+
+
+return res.status(404).json({
+
+error:"Draft not found"
+
+});
+
+
+}
+
+
+
+
+const devotion =
+draftDoc.data();
+
+
+
+
+await db
+
+.collection("daily-devotions")
+
+.add({
+
+
+...devotion,
+
+
+status:"published",
+
+
+
+// If you select a date from admin panel,
+// keep it.
+// Otherwise publish today.
+
+publishDate:
+
+devotion.publishDate ||
+
+new Date(),
+
+
+
+approvedAt:
+
+new Date()
+
+
+
+});
+
+
+
+
+
+await db
+
+.collection("daily-devotions-drafts")
+
+.doc(req.params.id)
+
+.delete();
+
+
+
+
+
+res.json({
+
+message:
+"Devotion approved successfully"
+
+});
+
+
+
+}
+catch(error){
+
+
+res.status(500).json({
+
+error:error.message
+
+});
+
+
+}
+
+
+});
+// ===============================
+// GET SINGLE PUBLISHED DEVOTION
+// ===============================
+
+
+app.get("/daily-devotions/:id", async(req,res)=>{
+
+
+try{
+
+
+const doc =
+
+await db
+
+.collection("daily-devotions")
+
+.doc(req.params.id)
+
+.get();
+
+
+
+
+if(!doc.exists){
+
+
+return res.status(404).json({
+
+error:"Devotion not found"
+
+});
+
+
+}
+
+
+
+res.json({
+
+id:doc.id,
+
+...doc.data()
+
+});
+
+
+
+}
+catch(error){
+
+
+console.error(
+
+"Single devotion error:",
+
+error.message
+
+);
+
+
+
+res.status(500).json({
+
+error:error.message
+
+});
+
+
+}
+
+
+});
+
+
+
+
+
+
+
+// ===============================
+// GET PUBLISHED DEVOTIONS
+// AUTOMATIC DAILY RELEASE SYSTEM
+// ===============================
 
 
 app.get("/daily-devotions", async(req,res)=>{
 
 
-    try{
+try{
 
 
-        const snapshot =
-        await db
-
-        .collection("daily-devotions")
-
-        .where(
-            "status",
-            "==",
-            "published"
-        )
-
-        .get();
+const today = new Date();
 
 
 
-        let devotions = [];
+
+const snapshot =
+
+await db
+
+.collection("daily-devotions")
+
+.where(
+
+"status",
+
+"==",
+
+"published"
+
+)
+
+.get();
 
 
 
-        snapshot.forEach(doc=>{
 
 
-            devotions.push({
-
-                id:doc.id,
-
-                ...doc.data()
-
-            });
-
-
-        });
+let devotions = [];
 
 
 
-        res.json(devotions);
+
+snapshot.forEach(doc=>{
+
+
+const data = doc.data();
 
 
 
-    }
-    catch(error){
-
-
-        console.error(
-
-            "Daily devotion loading error:",
-
-            error.message
-
-        );
+let publishDate = null;
 
 
 
-        res.status(500).json({
-
-            error:error.message
-
-        });
+if(data.publishDate){
 
 
-    }
+
+if(data.publishDate.seconds){
+
+
+publishDate =
+
+new Date(
+
+data.publishDate.seconds * 1000
+
+);
+
+
+
+}
+
+else{
+
+
+publishDate =
+
+new Date(data.publishDate);
+
+
+}
+
+
+}
+
+
+
+
+
+// Only show devotions
+// whose release date has arrived
+
+
+if(
+
+!publishDate ||
+
+publishDate <= today
+
+){
+
+
+devotions.push({
+
+id:doc.id,
+
+...data
+
+});
+
+
+}
+
 
 
 });
 
 
 
-// ==============================
-// APPROVE DEVOTION DRAFT
-// ==============================
-
-app.patch("/daily-devotions-drafts/:id/approve", async(req,res)=>{
-
-    try{
-
-        const id = req.params.id;
 
 
-        const draftDoc =
-        await db
-        .collection("daily-devotions-drafts")
-        .doc(id)
-        .get();
+// newest first
 
 
+devotions.sort((a,b)=>{
 
-        if(!draftDoc.exists){
 
-            return res.status(404).json({
-                error:"Draft not found"
-            });
+let dateA =
+a.publishDate?.seconds
+?
+a.publishDate.seconds
+:
+0;
 
-        }
+
+let dateB =
+b.publishDate?.seconds
+?
+b.publishDate.seconds
+:
+0;
 
 
 
-        const devotion =
-        draftDoc.data();
+return dateB - dateA;
 
-
-
-        await db
-        .collection("daily-devotions")
-        .add({
-
-            ...devotion,
-
-            status:"published",
-
-            publishedAt:new Date()
-
-        });
-
-
-
-        await db
-        .collection("daily-devotions-drafts")
-        .doc(id)
-        .delete();
-
-
-
-        res.json({
-
-            message:"Devotion approved successfully"
-
-        });
-
-
-    }
-    catch(error){
-
-        console.error(
-            "Approval error:",
-            error.message
-        );
-
-
-        res.status(500).json({
-
-            error:error.message
-
-        });
-
-    }
 
 });
 
-// ==============================
-// PUBLISH DAILY DEVOTION
-// ==============================
-
-
-app.patch(
-"/daily-devotions/:id/publish",
-async(req,res)=>{
-
-
-    try{
-
-
-        const devotionId =
-        req.params.id;
 
 
 
-        await db
 
-        .collection("daily-devotions")
-
-        .doc(devotionId)
-
-        .update({
-
-            status:"published",
-
-            publishedAt:new Date()
-
-        });
+res.json(devotions);
 
 
 
-        res.json({
-
-            message:
-            "Daily devotion published successfully."
-
-        });
+}
+catch(error){
 
 
+console.error(
 
-    }
-    catch(error){
+"Published devotion error:",
 
+error.message
 
-        console.error(
-
-            "Publishing error:",
-
-            error.message
-
-        );
+);
 
 
 
-        res.status(500).json({
+res.status(500).json({
 
-            error:error.message
+error:error.message
 
-        });
+});
 
 
-    }
+}
 
 
 });
+
+
 
 
 
 
 
 // ===============================
-// START SERVER
+// ADMIN VIEW ALL PUBLISHED
+// ===============================
+
+
+app.get(
+"/admin/published-devotions",
+async(req,res)=>{
+
+
+try{
+
+
+const snapshot =
+
+await db
+
+.collection("daily-devotions")
+
+.orderBy(
+
+"approvedAt",
+
+"desc"
+
+)
+
+.get();
+
+
+
+
+
+let devotions = [];
+
+
+
+
+snapshot.forEach(doc=>{
+
+
+devotions.push({
+
+id:doc.id,
+
+...doc.data()
+
+});
+
+
+});
+
+
+
+
+
+res.json(devotions);
+
+
+
+}
+catch(error){
+
+
+res.status(500).json({
+
+error:error.message
+
+});
+
+
+}
+
+
+});
+
+
+
+
+
+
+
+// ===============================
+// DELETE PUBLISHED DEVOTION
+// ===============================
+
+
+app.delete(
+"/daily-devotions/:id",
+async(req,res)=>{
+
+
+try{
+
+
+await db
+
+.collection("daily-devotions")
+
+.doc(req.params.id)
+
+.delete();
+
+
+
+
+
+res.json({
+
+message:
+
+"Devotion deleted successfully"
+
+});
+
+
+
+}
+catch(error){
+
+
+res.status(500).json({
+
+error:error.message
+
+});
+
+
+}
+
+
+});
+
+
+
+
+
+
+
+// ===============================
+// MANUAL PUBLISH UPDATE
+// ===============================
+
+
+app.patch(
+
+"/daily-devotions/:id/publish",
+
+async(req,res)=>{
+
+
+try{
+
+
+await db
+
+.collection("daily-devotions")
+
+.doc(req.params.id)
+
+.update({
+
+
+status:"published",
+
+
+publishDate:
+
+new Date(),
+
+
+publishedAt:
+
+new Date()
+
+
+
+});
+
+
+
+
+
+res.json({
+
+message:
+
+"Devotion published successfully"
+
+});
+
+
+
+}
+catch(error){
+
+
+res.status(500).json({
+
+error:error.message
+
+});
+
+
+}
+
+
+});
+
+
+
+
+
+
+
+// ===============================
+// SERVER START
 // ===============================
 
 
 const PORT =
+
 process.env.PORT || 10000;
 
 
 
 app.listen(
 
-    PORT,
+PORT,
 
-    "0.0.0.0",
+"0.0.0.0",
 
-    ()=>{
-
-
-        console.log(
-
-            "DNFC Kingdom AI Server running on port "
-            + PORT
-
-        );
+()=>{
 
 
-    }
+console.log(
+
+"DNFC Kingdom AI Server running on port "
++
+PORT
+
+);
+
+
+}
 
 );
