@@ -974,6 +974,59 @@ app.get("/daily-devotions-drafts/:id", async(req,res)=>{
 
 });
 
+// ==============================
+// GET SINGLE PUBLISHED DEVOTION
+// ==============================
+
+app.get("/daily-devotions/:id", async(req,res)=>{
+
+    try{
+
+        const id = req.params.id;
+
+
+        const doc =
+        await db
+        .collection("daily-devotions")
+        .doc(id)
+        .get();
+
+
+        if(!doc.exists){
+
+            return res.status(404).json({
+                error:"Devotion not found"
+            });
+
+        }
+
+
+        res.json({
+
+            id:doc.id,
+            ...doc.data()
+
+        });
+
+
+    }
+    catch(error){
+
+        console.error(
+            "Published devotion loading error:",
+            error.message
+        );
+
+
+        res.status(500).json({
+
+            error:error.message
+
+        });
+
+    }
+
+});
 
 // ==============================
 // APPROVE DAILY DEVOTION DRAFT
