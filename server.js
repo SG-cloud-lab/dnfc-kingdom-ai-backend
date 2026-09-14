@@ -1584,6 +1584,10 @@ await db
 
 
 
+const now = new Date();
+
+
+
 let devotions = [];
 
 
@@ -1592,11 +1596,88 @@ let devotions = [];
 snapshot.forEach(doc=>{
 
 
+const data =
+doc.data();
+
+
+
+let publishDate = null;
+
+
+
+/*
+Handle Firestore Timestamp
+*/
+
+if(
+data.publishDate &&
+typeof data.publishDate.toDate === "function"
+){
+
+    publishDate =
+    data.publishDate.toDate();
+
+}
+
+
+/*
+Handle Firestore timestamp object
+*/
+
+else if(
+data.publishDate &&
+data.publishDate.seconds
+){
+
+    publishDate =
+    new Date(
+        data.publishDate.seconds * 1000
+    );
+
+}
+
+
+/*
+Handle ISO date string
+*/
+
+else if(data.publishDate){
+
+    publishDate =
+    new Date(
+        data.publishDate
+    );
+
+}
+
+
+/*
+Only return devotions whose
+scheduled publication time has arrived.
+*/
+
+if(
+publishDate &&
+!isNaN(publishDate.getTime()) &&
+publishDate > now
+){
+
+    return;
+
+}
+
+
+
+/*
+Publication time has arrived,
+so make it available.
+*/
+
 devotions.push({
 
-id:doc.id,
+    id:doc.id,
 
-...doc.data()
+    ...data
 
 });
 
@@ -1615,6 +1696,16 @@ res.json(devotions);
 catch(error){
 
 
+console.error(
+
+"Admin published devotion error:",
+
+error.message
+
+);
+
+
+
 res.status(500).json({
 
 error:error.message
@@ -1626,8 +1717,6 @@ error:error.message
 
 
 });
-
-
 
 
 
