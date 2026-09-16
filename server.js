@@ -406,6 +406,7 @@ app.get(
         }
     }
 );
+
 // ===============================
 // AI QUESTION ROUTE
 // ===============================
@@ -1127,6 +1128,7 @@ app.get(
             });
 
         }
+
     }
 );
 
@@ -1276,8 +1278,10 @@ app.delete(
             });
 
         }
+
     }
 );
+
 // ===============================
 // ADMIN VIEW ALL PUBLISHED
 // ===============================
@@ -1424,6 +1428,7 @@ app.delete(
             });
 
         }
+
     }
 );
 
@@ -1469,8 +1474,10 @@ app.patch(
             });
 
         }
+
     }
 );
+
 // ======================================================
 // DNFC CONTENT ENGINE
 // ======================================================
@@ -1480,6 +1487,7 @@ app.patch(
 // ===============================
 app.post(
     "/content",
+
     upload.fields([
         {
             name: "media",
@@ -1504,7 +1512,8 @@ app.post(
                 mediaType,
                 placement,
                 publishMode,
-                publishDate
+                publishDate,
+                youtubeUrl
             } = req.body;
 
             if (!title) {
@@ -1517,74 +1526,68 @@ app.post(
             }
 
             // ===============================
-// MEDIA SOURCE VALIDATION
-// ===============================
+            // MEDIA SOURCE VALIDATION
+            // ===============================
 
-const youtubeUrl =
-    req.body.youtubeUrl || "";
+            const mediaFile =
+                req.files &&
+                req.files.media &&
+                req.files.media[0];
 
-const mediaFile =
-    req.files &&
-    req.files.media &&
-    req.files.media[0];
+            if (
+                mediaType === "video"
+            ) {
 
+                if (
+                    !youtubeUrl ||
+                    !youtubeUrl.trim()
+                ) {
 
-// VIDEO CONTENT
-// Videos now use YouTube instead of
-// uploading the video file to Cloudinary.
+                    return res.status(400).json({
+                        error:
+                            "YouTube video URL is required."
+                    });
 
-if (mediaType === "video") {
+                }
 
-    if (!youtubeUrl.trim()) {
+            }
 
-        return res.status(400).json({
-            error:
-                "YouTube video URL is required."
-        });
+            else {
 
-    }
+                if (!mediaFile) {
 
-}
+                    return res.status(400).json({
+                        error:
+                            "Audio media file is required."
+                    });
 
+                }
 
-// AUDIO CONTENT
-// Audio files are still uploaded
-// normally through Cloudinary.
-
-if (mediaType === "audio") {
-
-    if (!mediaFile) {
-
-        return res.status(400).json({
-            error:
-                "Audio media file is required."
-        });
-
-    }
-
-}
+            }
 
             // ===============================
-// UPLOAD MEDIA TO CLOUDINARY
-// ===============================
+            // AUDIO MEDIA UPLOAD
+            // ===============================
+            let mediaUpload =
+                null;
 
-let mediaUpload = null;
+            if (
+                mediaType !== "video"
+            ) {
 
-if (mediaType === "audio") {
+                mediaUpload =
+                    await uploadToCloudinary(
+                        mediaFile.buffer,
+                        {
+                            folder:
+                                "dnfc/media",
 
-    mediaUpload =
-        await uploadToCloudinary(
-            mediaFile.buffer,
-            {
-                folder:
-                    "dnfc/media",
+                            resource_type:
+                                "auto"
+                        }
+                    );
 
-                resource_type:
-                    "auto"
             }
-        );
-
-}
 
             // ===============================
             // UPLOAD THUMBNAIL
@@ -1654,431 +1657,106 @@ if (mediaType === "audio") {
             // ===============================
             // SAVE CONTENT TO FIRESTORE
             // ===============================
-                            const contentData = {
+            const contentData = {
 
-    title:
-        title,
+                title:
+                    title,
 
-    speaker:
-        speaker ||
-        "Shemmy Gaviyao",
+                speaker:
+                    speaker ||
+                    "Shemmy Gaviyao",
 
-    description:
-        description ||
-        "",
+                description:
+                    description ||
+                    "",
 
-    category:
-        category ||
-        "Sermon / Teaching",
+                category:
+                    category ||
+                    "Sermon / Teaching",
 
-    language:
-        language ||
-        "English",
+                language:
+                    language ||
+                    "English",
 
-    mediaType:
-        mediaType ||
-        "audio",
+                mediaType:
+                    mediaType ||
+                    "audio",
 
-    placement:
-        placement ||
-        "",
+                placement:
+                    placement ||
+                    "",
 
-    // AUDIO = Cloudinary
-    // VIDEO = YouTube
+                // AUDIO = Cloudinary
+                // VIDEO = YouTube
 
-    mediaUrl:
-        mediaType === "video"
-            ? youtubeUrl
-            : mediaUpload
-                ? mediaUpload.secure_url
-                : "",
+                mediaUrl:
+                    mediaType === "video"
+                    ?
+                    youtubeUrl
+                    :
+                    mediaUpload
+                    ?
+                    mediaUpload.secure_url
+                    :
+                    "",
 
-    mediaPublicId:
-        mediaUpload
-            ? mediaUpload.public_id
-            : "",
+                mediaPublicId:
+                    mediaUpload
+                    ?
+                    mediaUpload.public_id
+                    :
+                    "",
 
-    mediaResourceType:
-        mediaUpload
-            ? mediaUpload.resource_type
-            : "",
+                mediaResourceType:
+                    mediaUpload
+                    ?
+                    mediaUpload.resource_type
+                    :
+                    "",
 
-    // Keep YouTube URL separately
-    // for video content.
+                youtubeUrl:
+                    mediaType === "video"
+                    ?
+                    youtubeUrl
+                    :
+                    "",
 
-    youtubeUrl:
-        mediaType === "video"
-            ? youtubeUrl
-            : "",
+                thumbnailUrl:
+                    thumbnailUpload
+                    ?
+                    thumbnailUpload.secure_url
+                    :
+                    "",
 
-    thumbnailUrl:
-        thumbnailUpload
-            ?
-            thumbnailUpload.secure_url
-            :
-            "",
+                thumbnailPublicId:
+                    thumbnailUpload
+                    ?
+                    thumbnailUpload.public_id
+                    :
+                    "",
 
-    thumbnailPublicId:
-        thumbnailUpload
-            ?
-            thumbnailUpload.public_id
-            :
-            "",
+                status:
+                    contentStatus,
 
-    status:
-        contentStatus,
+                publishDate:
+                    finalPublishDate ||
+                    now,
 
-    publishDate:
-        finalPublishDate ||
-        now,
+                createdAt:
+                    now,
 
-    createdAt:
-        now,
+                updatedAt:
+                    now
+            };
 
-    updatedAt:
-        now
-};
-
-// ===============================
-// GET PUBLISHED CONTENT
-// ===============================
-app.get(
-    "/content",
-    async (req, res) => {
-
-        try {
-
-            const snapshot =
+            const docRef =
                 await db
                     .collection(
                         "content"
                     )
-                    .orderBy(
-                        "createdAt",
-                        "desc"
-                    )
-                    .get();
-
-            const now =
-                new Date();
-
-            let content = [];
-
-            snapshot.forEach(
-                doc => {
-
-                    const data =
-                        doc.data();
-
-                    let publishDate =
-                        null;
-
-                    if (
-                        data.publishDate &&
-                        typeof data.publishDate.toDate ===
-                        "function"
-                    ) {
-
-                        publishDate =
-                            data.publishDate.toDate();
-
-                    }
-
-                    else if (
-                        data.publishDate &&
-                        data.publishDate.seconds
-                    ) {
-
-                        publishDate =
-                            new Date(
-                                data.publishDate.seconds *
-                                1000
-                            );
-
-                    }
-
-                    else if (
-                        data.publishDate
-                    ) {
-
-                        publishDate =
-                            new Date(
-                                data.publishDate
-                            );
-
-                    }
-
-                    // ===============================
-                    // HIDE FUTURE CONTENT
-                    // ===============================
-                    if (
-                        publishDate &&
-                        publishDate > now
-                    ) {
-
-                        return;
-
-                    }
-
-                    content.push({
-
-                        id:
-                            doc.id,
-
-                        ...data
-
-                    });
-
-                }
-            );
-
-            res.json(
-                content
-            );
-
-        }
-
-        catch (error) {
-
-            console.error(
-                "Content loading error:",
-                error.message
-            );
-
-            res.status(500).json({
-                error:
-                    error.message
-            });
-
-        }
-    }
-);
-
-// ===============================
-// GET SINGLE CONTENT
-// ===============================
-app.get(
-    "/content/:id",
-    async (req, res) => {
-
-        try {
-
-            const doc =
-                await db
-                    .collection(
-                        "content"
-                    )
-                    .doc(
-                        req.params.id
-                    )
-                    .get();
-
-            if (!doc.exists) {
-
-                return res.status(404).json({
-                    error:
-                        "Content not found."
-                });
-
-            }
-
-            res.json({
-
-                id:
-                    doc.id,
-
-                ...doc.data()
-
-            });
-
-        }
-
-        catch (error) {
-
-            console.error(
-                "Single content error:",
-                error.message
-            );
-
-            res.status(500).json({
-                error:
-                    error.message
-            });
-
-        }
-    }
-);
-
-// ===============================
-// ADMIN VIEW ALL CONTENT
-// ===============================
-app.get(
-    "/admin/content",
-    async (req, res) => {
-
-        try {
-
-            const snapshot =
-                await db
-                    .collection(
-                        "content"
-                    )
-                    .orderBy(
-                        "createdAt",
-                        "desc"
-                    )
-                    .get();
-
-            let content = [];
-
-            snapshot.forEach(
-                doc => {
-
-                    content.push({
-
-                        id:
-                            doc.id,
-
-                        ...doc.data()
-
-                    });
-
-                }
-            );
-
-            res.json(
-                content
-            );
-
-        }
-
-        catch (error) {
-
-            console.error(
-                "Admin content loading error:",
-                error.message
-            );
-
-            res.status(500).json({
-                error:
-                    error.message
-            });
-
-        }
-    }
-);
-
-// ===============================
-// DELETE CONTENT
-// ===============================
-app.delete(
-    "/content/:id",
-    async (req, res) => {
-
-        try {
-
-            const doc =
-                await db
-                    .collection(
-                        "content"
-                    )
-                    .doc(
-                        req.params.id
-                    )
-                    .get();
-
-            if (!doc.exists) {
-
-                return res.status(404).json({
-                    error:
-                        "Content not found."
-                });
-
-            }
-
-            const data =
-                doc.data();
-
-            // ===============================
-            // DELETE MEDIA FROM CLOUDINARY
-            // ===============================
-            if (
-                data.mediaPublicId
-            ) {
-
-                try {
-
-                    await cloudinary
-                        .uploader
-                        .destroy(
-                            data.mediaPublicId,
-                            {
-                                resource_type:
-                                    data.mediaResourceType ||
-                                    "video"
-                            }
-                        );
-
-                }
-
-                catch (
-                    cloudinaryError
-                ) {
-
-                    console.error(
-                        "Cloudinary media deletion error:",
-                        cloudinaryError.message
+                    .add(
+                        contentData
                     );
-
-                }
-
-            }
-
-            // ===============================
-            // DELETE THUMBNAIL
-            // ===============================
-            if (
-                data.thumbnailPublicId
-            ) {
-
-                try {
-
-                    await cloudinary
-                        .uploader
-                        .destroy(
-                            data.thumbnailPublicId,
-                            {
-                                resource_type:
-                                    "image"
-                            }
-                        );
-
-                }
-
-                catch (
-                    cloudinaryError
-                ) {
-
-                    console.error(
-                        "Cloudinary thumbnail deletion error:",
-                        cloudinaryError.message
-                    );
-
-                }
-
-            }
-
-            // ===============================
-            // DELETE FIRESTORE RECORD
-            // ===============================
-            await db
-                .collection(
-                    "content"
-                )
-                .doc(
-                    req.params.id
-                )
-                .delete();
 
             res.json({
 
@@ -2086,7 +1764,18 @@ app.delete(
                     true,
 
                 message:
-                    "Content deleted successfully."
+                    "Content uploaded successfully.",
+
+                id:
+                    docRef.id,
+
+                content:
+                    {
+                        id:
+                            docRef.id,
+
+                        ...contentData
+                    }
 
             });
 
@@ -2095,8 +1784,8 @@ app.delete(
         catch (error) {
 
             console.error(
-                "Content deletion error:",
-                error.message
+                "Content upload error:",
+                error
             );
 
             res.status(500).json({
@@ -2110,12 +1799,336 @@ app.delete(
             });
 
         }
+
     }
 );
+// ===============================
+// GET PUBLISHED CONTENT
+// ===============================
+
+app.get(
+    "/content",
+    async (req, res) => {
+
+        try {
+
+            const snapshot =
+                await db
+                    .collection("content")
+                    .where(
+                        "status",
+                        "==",
+                        "published"
+                    )
+                    .get();
+
+            const now =
+                new Date();
+
+            const content =
+                snapshot.docs
+                    .map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }))
+                    .filter(item => {
+
+                        if (!item.publishDate) {
+                            return true;
+                        }
+
+                        const publishDate =
+                            item.publishDate.toDate
+                                ? item.publishDate.toDate()
+                                : new Date(
+                                    item.publishDate
+                                );
+
+                        return publishDate <= now;
+                    })
+                    .sort((a, b) => {
+
+                        const dateA =
+                            a.publishDate?.toDate
+                                ? a.publishDate.toDate()
+                                : new Date(
+                                    a.publishDate ||
+                                    a.createdAt ||
+                                    0
+                                );
+
+                        const dateB =
+                            b.publishDate?.toDate
+                                ? b.publishDate.toDate()
+                                : new Date(
+                                    b.publishDate ||
+                                    b.createdAt ||
+                                    0
+                                );
+
+                        return dateB - dateA;
+                    });
+
+            res.json(content);
+
+        } catch (error) {
+
+            console.error(
+                "GET /content error:",
+                error
+            );
+
+            res.status(500).json({
+                error:
+                    error.message
+            });
+        }
+    }
+);
+
+
+// ===============================
+// GET SINGLE CONTENT
+// ===============================
+
+app.get(
+    "/content/:id",
+    async (req, res) => {
+
+        try {
+
+            const doc =
+                await db
+                    .collection("content")
+                    .doc(req.params.id)
+                    .get();
+
+            if (!doc.exists) {
+
+                return res.status(404).json({
+                    error:
+                        "Content not found."
+                });
+            }
+
+            const data =
+                doc.data();
+
+            if (
+                data.status !==
+                "published"
+            ) {
+
+                return res.status(404).json({
+                    error:
+                        "Content not found."
+                });
+            }
+
+            if (data.publishDate) {
+
+                const publishDate =
+                    data.publishDate.toDate
+                        ? data.publishDate.toDate()
+                        : new Date(
+                            data.publishDate
+                        );
+
+                if (
+                    publishDate >
+                    new Date()
+                ) {
+
+                    return res.status(404).json({
+                        error:
+                            "Content not found."
+                    });
+                }
+            }
+
+            res.json({
+                id: doc.id,
+                ...data
+            });
+
+        } catch (error) {
+
+            console.error(
+                "GET /content/:id error:",
+                error
+            );
+
+            res.status(500).json({
+                error:
+                    error.message
+            });
+        }
+    }
+);
+
+
+// ===============================
+// GET ALL CONTENT FOR ADMIN
+// ===============================
+
+app.get(
+    "/admin/content",
+    async (req, res) => {
+
+        try {
+
+            const snapshot =
+                await db
+                    .collection("content")
+                    .orderBy(
+                        "createdAt",
+                        "desc"
+                    )
+                    .get();
+
+            const content =
+                snapshot.docs.map(
+                    doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    })
+                );
+
+            res.json(content);
+
+        } catch (error) {
+
+            console.error(
+                "GET /admin/content error:",
+                error
+            );
+
+            res.status(500).json({
+                error:
+                    error.message
+            });
+        }
+    }
+);
+
+
+// ===============================
+// DELETE CONTENT
+// ===============================
+
+app.delete(
+    "/content/:id",
+    async (req, res) => {
+
+        try {
+
+            const doc =
+                await db
+                    .collection("content")
+                    .doc(req.params.id)
+                    .get();
+
+            if (!doc.exists) {
+
+                return res.status(404).json({
+                    error:
+                        "Content not found."
+                });
+            }
+
+            const data =
+                doc.data();
+
+
+            // ===============================
+            // DELETE MEDIA FROM CLOUDINARY
+            // ===============================
+
+            if (data.mediaPublicId) {
+
+                try {
+
+                    await cloudinary.uploader.destroy(
+                        data.mediaPublicId,
+                        {
+                            resource_type:
+                                data.mediaResourceType ||
+                                "video"
+                        }
+                    );
+
+                } catch (cloudinaryError) {
+
+                    console.error(
+                        "Cloudinary media deletion error:",
+                        cloudinaryError
+                    );
+                }
+            }
+
+
+            // ===============================
+            // DELETE THUMBNAIL FROM CLOUDINARY
+            // ===============================
+
+            if (data.thumbnailPublicId) {
+
+                try {
+
+                    await cloudinary.uploader.destroy(
+                        data.thumbnailPublicId,
+                        {
+                            resource_type:
+                                "image"
+                        }
+                    );
+
+                } catch (cloudinaryError) {
+
+                    console.error(
+                        "Cloudinary thumbnail deletion error:",
+                        cloudinaryError
+                    );
+                }
+            }
+
+
+            // ===============================
+            // DELETE FIRESTORE DOCUMENT
+            // ===============================
+
+            await db
+                .collection("content")
+                .doc(req.params.id)
+                .delete();
+
+
+            res.json({
+                success: true,
+                message:
+                    "Content deleted successfully."
+            });
+
+        } catch (error) {
+
+            console.error(
+                "DELETE /content/:id error:",
+                error
+            );
+
+            res.status(500).json({
+                error:
+                    error.message
+            });
+        }
+    }
+);
+
 
 // ===============================
 // SERVER START
 // ===============================
+
 const PORT =
     process.env.PORT ||
     10000;
@@ -2129,6 +2142,5 @@ app.listen(
             "DNFC Kingdom AI Server running on port " +
             PORT
         );
-
     }
 );
