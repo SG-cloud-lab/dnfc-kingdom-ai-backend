@@ -1516,36 +1516,75 @@ app.post(
 
             }
 
-            if (
-                !req.files ||
-                !req.files.media ||
-                !req.files.media[0]
-            ) {
+            // ===============================
+// MEDIA SOURCE VALIDATION
+// ===============================
 
-                return res.status(400).json({
-                    error:
-                        "Media file is required."
-                });
+const youtubeUrl =
+    req.body.youtubeUrl || "";
 
+const mediaFile =
+    req.files &&
+    req.files.media &&
+    req.files.media[0];
+
+
+// VIDEO CONTENT
+// Videos now use YouTube instead of
+// uploading the video file to Cloudinary.
+
+if (mediaType === "video") {
+
+    if (!youtubeUrl.trim()) {
+
+        return res.status(400).json({
+            error:
+                "YouTube video URL is required."
+        });
+
+    }
+
+}
+
+
+// AUDIO CONTENT
+// Audio files are still uploaded
+// normally through Cloudinary.
+
+if (mediaType === "audio") {
+
+    if (!mediaFile) {
+
+        return res.status(400).json({
+            error:
+                "Audio media file is required."
+        });
+
+    }
+
+}
+
+            // ===============================
+// UPLOAD MEDIA TO CLOUDINARY
+// ===============================
+
+let mediaUpload = null;
+
+if (mediaType === "audio") {
+
+    mediaUpload =
+        await uploadToCloudinary(
+            mediaFile.buffer,
+            {
+                folder:
+                    "dnfc/media",
+
+                resource_type:
+                    "auto"
             }
+        );
 
-            const mediaFile =
-                req.files.media[0];
-
-            // ===============================
-            // UPLOAD MEDIA TO CLOUDINARY
-            // ===============================
-            const mediaUpload =
-                await uploadToCloudinary(
-                    mediaFile.buffer,
-                    {
-                        folder:
-                            "dnfc/media",
-
-                        resource_type:
-                            "auto"
-                    }
-                );
+}
 
             // ===============================
             // UPLOAD THUMBNAIL
@@ -1615,124 +1654,90 @@ app.post(
             // ===============================
             // SAVE CONTENT TO FIRESTORE
             // ===============================
-            const contentData = {
+                            const contentData = {
 
-                title:
-                    title,
+    title:
+        title,
 
-                speaker:
-                    speaker ||
-                    "Shemmy Gaviyao",
+    speaker:
+        speaker ||
+        "Shemmy Gaviyao",
 
-                description:
-                    description ||
-                    "",
+    description:
+        description ||
+        "",
 
-                category:
-                    category ||
-                    "Sermon / Teaching",
+    category:
+        category ||
+        "Sermon / Teaching",
 
-                language:
-                    language ||
-                    "English",
+    language:
+        language ||
+        "English",
 
-                mediaType:
-                    mediaType ||
-                    "audio",
+    mediaType:
+        mediaType ||
+        "audio",
 
-                placement:
-                    placement ||
-                    "",
+    placement:
+        placement ||
+        "",
 
-                mediaUrl:
-                    mediaUpload.secure_url,
+    // AUDIO = Cloudinary
+    // VIDEO = YouTube
 
-                mediaPublicId:
-                    mediaUpload.public_id,
+    mediaUrl:
+        mediaType === "video"
+            ? youtubeUrl
+            : mediaUpload
+                ? mediaUpload.secure_url
+                : "",
 
-                mediaResourceType:
-                    mediaUpload.resource_type,
+    mediaPublicId:
+        mediaUpload
+            ? mediaUpload.public_id
+            : "",
 
-                thumbnailUrl:
-                    thumbnailUpload
-                    ?
-                    thumbnailUpload.secure_url
-                    :
-                    "",
+    mediaResourceType:
+        mediaUpload
+            ? mediaUpload.resource_type
+            : "",
 
-                thumbnailPublicId:
-                    thumbnailUpload
-                    ?
-                    thumbnailUpload.public_id
-                    :
-                    "",
+    // Keep YouTube URL separately
+    // for video content.
 
-                status:
-                    contentStatus,
+    youtubeUrl:
+        mediaType === "video"
+            ? youtubeUrl
+            : "",
 
-                publishDate:
-                    finalPublishDate ||
-                    now,
+    thumbnailUrl:
+        thumbnailUpload
+            ?
+            thumbnailUpload.secure_url
+            :
+            "",
 
-                createdAt:
-                    now,
+    thumbnailPublicId:
+        thumbnailUpload
+            ?
+            thumbnailUpload.public_id
+            :
+            "",
 
-                updatedAt:
-                    now
-            };
+    status:
+        contentStatus,
 
-            const docRef =
-                await db
-                    .collection(
-                        "content"
-                    )
-                    .add(
-                        contentData
-                    );
+    publishDate:
+        finalPublishDate ||
+        now,
 
-            res.json({
+    createdAt:
+        now,
 
-                success:
-                    true,
-
-                message:
-                    "Content uploaded successfully.",
-
-                id:
-                    docRef.id,
-
-                content:
-                    {
-                        id:
-                            docRef.id,
-
-                        ...contentData
-                    }
-
-            });
-
-        }
-
-        catch (error) {
-
-            console.error(
-                "Content upload error:",
-                error
-            );
-
-            res.status(500).json({
-
-                success:
-                    false,
-
-                error:
-                    error.message
-
-            });
-
-        }
-    }
-);
+    updatedAt:
+        now
+};
 
 // ===============================
 // GET PUBLISHED CONTENT
