@@ -152,7 +152,7 @@ async function generateWithFallback(
 ) {
 
     const models = [
-    "gemini-2.5-flash"
+    "gemini-3.6-flash"
 ];
     
     
