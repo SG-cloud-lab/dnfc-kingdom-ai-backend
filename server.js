@@ -6,7 +6,7 @@ require("dotenv").config();
 
 const admin = require("firebase-admin");
 
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { GoogleGenAI } = require("@google/genai");
 const { v2: cloudinary } = require("cloudinary");
 const multer = require("multer");
 
@@ -31,11 +31,9 @@ if (!process.env.GEMINI_API_KEY) {
     console.error("FATAL: GEMINI_API_KEY missing");
 }
 
-const genAI =
-    new GoogleGenerativeAI(
-        process.env.GEMINI_API_KEY
-    );
-
+const genAI = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY
+});
 // ===============================
 // FIREBASE CONNECTION
 // ===============================
@@ -147,58 +145,56 @@ function uploadToCloudinary(
 // ===============================
 // GEMINI FALLBACK SYSTEM
 // ===============================
-async function generateWithFallback(
-    prompt
-) {
-
-    const models = [
+async function generateWithFallback(prompt) {
+  const models = [
     "gemini-3.6-flash"
-];
-    
-    
-    let lastError;
+  ];
 
-    for (
-        const modelName
-        of models
-    ) {
+  let lastError;
 
-        try {
+  for (const modelName of models) {
+    try {
+      console.log("Trying model:", modelName);
 
-            console.log(
-                "Trying model:",
-                modelName
-            );
+      const response = await genAI.models.generateContent({
+        model: modelName,
+        contents: prompt
+      });
 
-            const model =
-                genAI.getGenerativeModel({
-                    model:
-                        modelName
-                });
+      return response.text;
+    } catch (error) {
+      console.log(
+        modelName + " failed:",
+        error.message
+      );
 
-            const result =
-                await model.generateContent(
-                    prompt
-                );
+      lastError = error;
 
-            return result.response.text();
+      const message = String(
+        error?.message || error
+      );
 
-        }
+      const isTemporaryError =
+        message.includes("503") ||
+        message.includes("UNAVAILABLE") ||
+        message.includes("429") ||
+        message.includes("RESOURCE_EXHAUSTED");
 
-        catch (error) {
+      if (isTemporaryError) {
+        console.log(
+          "Temporary Gemini error. Waiting before retry..."
+        );
 
-            console.log(
-                modelName +
-                " failed:",
-                error.message
-            );
-
-            lastError = error;
-        }
+        await new Promise(resolve =>
+          setTimeout(resolve, 2000)
+        );
+      }
     }
+  }
 
-    throw lastError;
+  throw lastError;
 }
+
 
 // ===============================
 // LOAD DNFC KNOWLEDGE LIBRARY
